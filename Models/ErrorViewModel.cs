@@ -1,4 +1,4 @@
-namespace WebApplication1.Models
+namespace Shopify.Models
 {
     public class ErrorViewModel
     {

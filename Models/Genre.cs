@@ -3,19 +3,17 @@ using System.ComponentModel.DataAnnotations;
 namespace Shopify.Models
 {
 
-    public class Artist
+    public class Genre
     {
         [Key]
-        public int ArtistId { get; set; }
+        public int GenreId { get; set; }
 
-        [Required, StringLength(100)]
+        [Required, MaxLength(100)]
         public string Name { get; set; }
 
-        public string? Bio { get; set; }
-        public string? ImageUrl { get; set; }
+        public string? Description { get; set; }
 
         // Navigation
         public ICollection<Song>? Songs { get; set; }
-        public ICollection<Album>? Albums { get; set; }
     }
 }
