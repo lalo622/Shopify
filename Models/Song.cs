@@ -16,7 +16,7 @@ namespace Shopify.Models
         [Required]
         public string AudioUrl { get; set; }
 
-        public TimeSpan? Duration { get; set; }
+        public String? Duration { get; set; }
 
         // FK - Artist
         public int ArtistId { get; set; }

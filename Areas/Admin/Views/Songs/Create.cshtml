@@ -1,0 +1,142 @@
+@using Shopify.Models
+@model Song
+
+@{
+    ViewData["Title"] = "Thêm bài hát";
+}
+
+<h2>Thêm bài hát mới</h2>
+
+<form asp-action="Create" method="post" enctype="multipart/form-data">
+    <div class="mb-3">
+        <label asp-for="Title" class="form-label">Tên bài hát</label>
+        <input asp-for="Title" class="form-control" />
+        <span asp-validation-for="Title" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Description" class="form-label">Mô tả</label>
+        <textarea asp-for="Description" class="form-control"></textarea>
+    </div>
+
+    <div class="mb-3">
+        <label for="audioFile" class="form-label">File nhạc</label>
+        <input type="file" name="audioFile" id="audioFile" class="form-control" 
+               accept=".mp3,.wav,.m4a,.aac,.ogg" required />
+        <small class="form-text text-muted">Chấp nhận file: MP3, WAV, M4A, AAC, OGG</small>
+        <span class="text-danger" id="fileValidation"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Duration" class="form-label">Thời lượng</label>
+        <input asp-for="Duration" id="Duration" class="form-control" readonly 
+               placeholder="Sẽ tự động điền sau khi chọn file nhạc" />
+        <small class="form-text text-muted">Tự động điền thời lượng từ file nhạc</small>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="ArtistId" class="form-label">Nghệ sĩ</label>
+        <select asp-for="ArtistId" asp-items="ViewBag.ArtistId" class="form-select">
+            <option value="">-- Chọn nghệ sĩ --</option>
+        </select>
+        <span asp-validation-for="ArtistId" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="GenreId" class="form-label">Thể loại</label>
+        <select asp-for="GenreId" asp-items="ViewBag.GenreId" class="form-select">
+            <option value="">-- Chọn thể loại --</option>
+        </select>
+        <span asp-validation-for="GenreId" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-success">Lưu</button>
+    <a asp-action="Index" class="btn btn-secondary">Hủy</a>
+</form>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+    
+    <script>
+        document.getElementById('audioFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const fileValidation = document.getElementById('fileValidation');
+            const durationInput = document.getElementById('Duration');
+            
+            if (file) {
+                // Kiểm tra kích thước file (tối đa 50MB)
+                const maxSize = 50 * 1024 * 1024;
+                if (file.size > maxSize) {
+                    fileValidation.textContent = 'File quá lớn. Kích thước tối đa là 50MB.';
+                    e.target.value = '';
+                    durationInput.value = '';
+                    return;
+                }
+                
+                // Kiểm tra định dạng file
+                const allowedExtensions = ['.mp3', '.wav', '.m4a', '.aac', '.ogg'];
+                const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+                
+                if (!allowedExtensions.includes(fileExtension)) {
+                    fileValidation.textContent = 'Chỉ chấp nhận file nhạc (MP3, WAV, M4A, AAC, OGG)';
+                    e.target.value = '';
+                    durationInput.value = '';
+                    return;
+                }
+                
+                fileValidation.textContent = '';
+                
+                // Lấy thời lượng file nhạc
+                getAudioDuration(file).then(duration => {
+                    if (duration && duration > 0) {
+                        const minutes = Math.floor(duration / 60);
+                        const seconds = Math.floor(duration % 60);
+                        const hours = Math.floor(minutes / 60);
+                        const remainingMinutes = minutes % 60;
+                        
+                        // Format: hh:mm:ss
+                        const formattedDuration = 
+                            hours.toString().padStart(2, '0') + ':' +
+                            remainingMinutes.toString().padStart(2, '0') + ':' +
+                            seconds.toString().padStart(2, '0');
+                        
+                        durationInput.value = formattedDuration;
+                    }
+                }).catch(error => {
+                    console.error('Lỗi khi lấy thời lượng:', error);
+                    fileValidation.textContent = 'Không thể đọc thời lượng file. Vui lòng nhập thủ công.';
+                    durationInput.readOnly = false;
+                    durationInput.placeholder = 'Nhập thời lượng (hh:mm:ss)';
+                });
+            } else {
+                durationInput.value = '';
+            }
+        });
+
+        // Hàm lấy thời lượng file nhạc
+        function getAudioDuration(file) {
+            return new Promise((resolve, reject) => {
+                const audio = new Audio();
+                const objectUrl = URL.createObjectURL(file);
+                
+                audio.src = objectUrl;
+                
+                audio.addEventListener('loadedmetadata', function() {
+                    URL.revokeObjectURL(objectUrl);
+                    resolve(audio.duration);
+                });
+                
+                audio.addEventListener('error', function(e) {
+                    URL.revokeObjectURL(objectUrl);
+                    reject(e);
+                });
+                
+               
+                setTimeout(() => {
+                    URL.revokeObjectURL(objectUrl);
+                    reject(new Error('Timeout khi đọc file'));
+                }, 10000);
+            });
+        }
+    </script>
+}

@@ -1,0 +1,40 @@
+@using Shopify.Models
+@model IEnumerable<Song>
+
+@{
+    ViewData["Title"] = "Danh sách bài hát";
+}
+
+<h2 class="mb-3">Danh sách bài hát</h2>
+
+<p>
+    <a class="btn btn-primary" href="/Admin/Songs/Create">+ Thêm bài hát</a>
+</p>
+
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Tiêu đề</th>
+            <th>Nghệ sĩ</th>
+            <th>Thể loại</th>
+            <th>Thời lượng</th>
+            <th>Thao tác</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Title</td>
+                <td>@item.Artist?.Name</td>
+                <td>@item.Genre?.Name</td>
+                <td>@(string.IsNullOrEmpty(item.Duration) ? "-" : item.Duration)</td>
+                <td>
+                    <a asp-action="Details" asp-route-id="@item.SongId" class="btn btn-info btn-sm">Chi tiết</a>
+                    <a asp-action="Edit" asp-route-id="@item.SongId" class="btn btn-warning btn-sm">Sửa</a>
+                    <a asp-action="Delete" asp-route-id="@item.SongId" class="btn btn-danger btn-sm">Xóa</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
