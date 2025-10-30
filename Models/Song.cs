@@ -13,8 +13,7 @@ namespace Shopify.Models
 
         public string? Description { get; set; }
 
-        [Required]
-        public string AudioUrl { get; set; }
+        public string? AudioUrl { get; set; }
 
         public String? Duration { get; set; }
 
@@ -27,7 +26,7 @@ namespace Shopify.Models
         public Genre? Genre { get; set; }
 
         // FK - Album
-        public int AlbumId { get; set; }
+        public int? AlbumId { get; set; }
         public Album? Album { get; set; }
     }
 }

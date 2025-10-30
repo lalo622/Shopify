@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Shopify.Data;
 using Shopify.Models;
+using Microsoft.AspNetCore.Hosting;
 
 namespace Shopify.Areas.Admin.Controllers
 {
@@ -10,252 +10,337 @@ namespace Shopify.Areas.Admin.Controllers
     public class SongsController : Controller
     {
         private readonly MusicDbContext _context;
-        private readonly IWebHostEnvironment _environment;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public SongsController(MusicDbContext context, IWebHostEnvironment environment)
+        public SongsController(MusicDbContext context, IWebHostEnvironment webHostEnvironment)
         {
             _context = context;
-            _environment = environment;
+            _webHostEnvironment = webHostEnvironment;
         }
 
-        // GET: Songs
+        // GET: Admin/Songs
         public async Task<IActionResult> Index()
         {
-            var songs = _context.Songs
+            var songs = await _context.Songs
                 .Include(s => s.Artist)
-                .Include(s => s.Genre);
-            return View(await songs.ToListAsync());
+                .Include(s => s.Genre)
+                .Include(s => s.Album)
+                .OrderByDescending(s => s.SongId)
+                .ToListAsync();
+
+            return View(songs);
         }
 
-        // GET: Songs/Details/5
+        // GET: Admin/Songs/Details/5
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null) return NotFound();
+            if (id == null)
+            {
+                return NotFound();
+            }
 
             var song = await _context.Songs
                 .Include(s => s.Artist)
                 .Include(s => s.Genre)
+                .Include(s => s.Album)
                 .FirstOrDefaultAsync(m => m.SongId == id);
 
-            if (song == null) return NotFound();
+            if (song == null)
+            {
+                return NotFound();
+            }
 
             return View(song);
         }
 
-        // GET: Songs/Create
-        public IActionResult Create()
+        // GET: Admin/Songs/Create
+        public async Task<IActionResult> Create()
         {
-            ViewData["ArtistId"] = new SelectList(_context.Artists, "ArtistId", "Name");
-            ViewData["GenreId"] = new SelectList(_context.Genres, "GenreId", "Name");
+            ViewBag.Artists = await _context.Artists.OrderBy(a => a.Name).ToListAsync();
+            ViewBag.Genres = await _context.Genres.OrderBy(g => g.Name).ToListAsync();
+            ViewBag.Albums = await _context.Albums.Include(a => a.Artist).OrderBy(a => a.Title).ToListAsync();
             return View();
         }
 
-        // POST: Songs/Create
+        // POST: Admin/Songs/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("SongId,Title,Description,Duration,ArtistId,GenreId")] Song song, IFormFile audioFile)
+        
+        public async Task<IActionResult> Create(Song song, IFormFile audioFile)
         {
-            if (ModelState.IsValid)
+            Console.WriteLine($"Title: {song?.Title ?? "NULL"}");
+            Console.WriteLine($"ArtistId: {song?.ArtistId}");
+            Console.WriteLine($"GenreId: {song?.GenreId}");
+            Console.WriteLine($"AudioFile: {audioFile?.FileName ?? "NULL"}");
+            // Xóa validation cho các navigation properties
+            ModelState.Remove("Artist");
+            ModelState.Remove("Genre");
+            ModelState.Remove("Album");
+            ModelState.Remove("AudioUrl");
+
+            // Kiểm tra trùng tên bài hát (case-insensitive) - FIX NULL
+            if (!string.IsNullOrWhiteSpace(song.Title))
             {
-                // Xử lý upload file nhạc
-                if (audioFile != null && audioFile.Length > 0)
+                var titleToCheck = song.Title.Trim().ToLower();
+                var existingSong = await _context.Songs
+                    .FirstOrDefaultAsync(s => s.Title.ToLower().Trim() == titleToCheck);
+
+                if (existingSong != null)
                 {
-                    // Kiểm tra định dạng file
-                    var allowedExtensions = new[] { ".mp3", ".wav", ".m4a", ".aac" };
-                    var fileExtension = Path.GetExtension(audioFile.FileName).ToLower();
-
-                    if (!allowedExtensions.Contains(fileExtension))
-                    {
-                        ModelState.AddModelError("AudioFile", "Chỉ chấp nhận file nhạc (mp3, wav, m4a, aac)");
-                        ViewData["ArtistId"] = new SelectList(_context.Artists, "ArtistId", "Name", song.ArtistId);
-                        ViewData["GenreId"] = new SelectList(_context.Genres, "GenreId", "Name", song.GenreId);
-                        return View(song);
-                    }
-
-                    // Tạo tên file unique với timestamp để tránh trùng
-                    var fileName = $"{Guid.NewGuid()}_{DateTime.Now:yyyyMMddHHmmss}{fileExtension}";
-                    var uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads", "songs");
-
-                    // Tạo thư mục nếu chưa tồn tại
-                    if (!Directory.Exists(uploadsFolder))
-                    {
-                        Directory.CreateDirectory(uploadsFolder);
-                    }
-
-                    var filePath = Path.Combine(uploadsFolder, fileName);
-
-                    // Kiểm tra xem file đã tồn tại chưa (phòng trường hợp hiếm)
-                    if (System.IO.File.Exists(filePath))
-                    {
-                        // Nếu trùng, tạo tên mới
-                        fileName = $"{Guid.NewGuid()}_{DateTime.Now:yyyyMMddHHmmssfff}{fileExtension}";
-                        filePath = Path.Combine(uploadsFolder, fileName);
-                    }
-
-                    try
-                    {
-                        // Lưu file
-                        using (var stream = new FileStream(filePath, FileMode.CreateNew)) // Dùng CreateNew để tránh ghi đè
-                        {
-                            await audioFile.CopyToAsync(stream);
-                        }
-
-                        // Lưu đường dẫn file vào database
-                        song.AudioUrl = "/uploads/songs/" + fileName;
-                    }
-                    catch (IOException ex) when (ex.Message.Contains("already exists"))
-                    {
-                        ModelState.AddModelError("AudioFile", "File đã tồn tại. Vui lòng thử lại.");
-                        ViewData["ArtistId"] = new SelectList(_context.Artists, "ArtistId", "Name", song.ArtistId);
-                        ViewData["GenreId"] = new SelectList(_context.Genres, "GenreId", "Name", song.GenreId);
-                        return View(song);
-                    }
+                    ModelState.AddModelError("Title", "Bài hát với tên này đã tồn tại!");
                 }
-                else
-                {
-                    ModelState.AddModelError("AudioFile", "Vui lòng chọn file nhạc");
-                    ViewData["ArtistId"] = new SelectList(_context.Artists, "ArtistId", "Name", song.ArtistId);
-                    ViewData["GenreId"] = new SelectList(_context.Genres, "GenreId", "Name", song.GenreId);
-                    return View(song);
-                }
-
-                _context.Add(song);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
             }
 
-            ViewData["ArtistId"] = new SelectList(_context.Artists, "ArtistId", "Name", song.ArtistId);
-            ViewData["GenreId"] = new SelectList(_context.Genres, "GenreId", "Name", song.GenreId);
-            return View(song);
-        }
+            // Validate file nhạc
+            if (audioFile == null || audioFile.Length == 0)
+            {
+                ModelState.AddModelError("AudioFile", "Vui lòng chọn file nhạc!");
+            }
+            else
+            {
+                // Kiểm tra định dạng file
+                var allowedExtensions = new[] { ".mp3", ".wav", ".m4a", ".aac", ".ogg" };
+                var fileExtension = Path.GetExtension(audioFile.FileName).ToLower();
 
-        // GET: Songs/Edit/5
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null) return NotFound();
+                if (!allowedExtensions.Contains(fileExtension))
+                {
+                    ModelState.AddModelError("AudioFile", "Chỉ chấp nhận file nhạc (MP3, WAV, M4A, AAC, OGG)!");
+                }
 
-            var song = await _context.Songs.FindAsync(id);
-            if (song == null) return NotFound();
-
-            ViewData["ArtistId"] = new SelectList(_context.Artists, "ArtistId", "Name", song.ArtistId);
-            ViewData["GenreId"] = new SelectList(_context.Genres, "GenreId", "Name", song.GenreId);
-            return View(song);
-        }
-
-        // POST: Songs/Edit/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("SongId,Title,Description,AudioUrl,Duration,ArtistId,GenreId")] Song song, IFormFile audioFile)
-        {
-            if (id != song.SongId) return NotFound();
+                // Kiểm tra kích thước file (tối đa 50MB)
+                if (audioFile.Length > 50 * 1024 * 1024)
+                {
+                    ModelState.AddModelError("AudioFile", "Kích thước file không được vượt quá 50MB!");
+                }
+            }
 
             if (ModelState.IsValid)
             {
                 try
                 {
-                    // Xử lý upload file nhạc mới nếu có
+                    // Upload file nhạc
                     if (audioFile != null && audioFile.Length > 0)
                     {
-                        // Kiểm tra định dạng file
-                        var allowedExtensions = new[] { ".mp3", ".wav", ".m4a", ".aac" };
-                        var fileExtension = Path.GetExtension(audioFile.FileName).ToLower();
-
-                        if (!allowedExtensions.Contains(fileExtension))
-                        {
-                            ModelState.AddModelError("AudioFile", "Chỉ chấp nhận file nhạc (mp3, wav, m4a, aac)");
-                            ViewData["ArtistId"] = new SelectList(_context.Artists, "ArtistId", "Name", song.ArtistId);
-                            ViewData["GenreId"] = new SelectList(_context.Genres, "GenreId", "Name", song.GenreId);
-                            return View(song);
-                        }
-
-                        // Tạo tên file mới với timestamp
-                        var fileName = $"{Guid.NewGuid()}_{DateTime.Now:yyyyMMddHHmmss}{fileExtension}";
-                        var uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads", "songs");
-
+                        string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "songs");
+                        
+                        // Tạo thư mục nếu chưa tồn tại
                         if (!Directory.Exists(uploadsFolder))
                         {
                             Directory.CreateDirectory(uploadsFolder);
                         }
 
-                        var filePath = Path.Combine(uploadsFolder, fileName);
+                        // Tạo tên file unique
+                        string uniqueFileName = Guid.NewGuid().ToString() + "_" + Path.GetFileName(audioFile.FileName);
+                        string filePath = Path.Combine(uploadsFolder, uniqueFileName);
 
-                        // Kiểm tra trùng tên
-                        if (System.IO.File.Exists(filePath))
+                        // Lưu file
+                        using (var fileStream = new FileStream(filePath, FileMode.Create))
                         {
-                            fileName = $"{Guid.NewGuid()}_{DateTime.Now:yyyyMMddHHmmssfff}{fileExtension}";
-                            filePath = Path.Combine(uploadsFolder, fileName);
+                            await audioFile.CopyToAsync(fileStream);
                         }
 
-                        // Lưu file mới
-                        using (var stream = new FileStream(filePath, FileMode.CreateNew))
-                        {
-                            await audioFile.CopyToAsync(stream);
-                        }
+                        // Lưu đường dẫn tương đối vào database
+                        song.AudioUrl = "/uploads/songs/" + uniqueFileName;
+                    }
 
+                    _context.Add(song);
+                    await _context.SaveChangesAsync();
+                    TempData["SuccessMessage"] = "Thêm bài hát thành công!";
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError("", "Có lỗi xảy ra khi lưu bài hát: " + ex.Message);
+                }
+            }
+
+            // Nếu có lỗi, load lại danh sách
+            ViewBag.Artists = await _context.Artists.OrderBy(a => a.Name).ToListAsync();
+            ViewBag.Genres = await _context.Genres.OrderBy(g => g.Name).ToListAsync();
+            ViewBag.Albums = await _context.Albums.Include(a => a.Artist).OrderBy(a => a.Title).ToListAsync();
+            return View(song);
+        }
+
+        // GET: Admin/Songs/Edit/5
+        public async Task<IActionResult> Edit(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var song = await _context.Songs.FindAsync(id);
+            if (song == null)
+            {
+                return NotFound();
+            }
+
+            ViewBag.Artists = await _context.Artists.OrderBy(a => a.Name).ToListAsync();
+            ViewBag.Genres = await _context.Genres.OrderBy(g => g.Name).ToListAsync();
+            ViewBag.Albums = await _context.Albums.Include(a => a.Artist).OrderBy(a => a.Title).ToListAsync();
+            return View(song);
+        }
+
+        // POST: Admin/Songs/Edit/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, Song song, IFormFile? audioFile)
+        {
+            if (id != song.SongId)
+            {
+                return NotFound();
+            }
+
+            // Xóa validation cho các navigation properties
+            ModelState.Remove("Artist");
+            ModelState.Remove("Genre");
+            ModelState.Remove("Album");
+            ModelState.Remove("AudioUrl");
+
+            // Kiểm tra trùng tên bài hát (trừ chính nó) - FIX NULL
+            if (!string.IsNullOrWhiteSpace(song.Title))
+            {
+                var titleToCheck = song.Title.Trim().ToLower();
+                var existingSong = await _context.Songs
+                    .FirstOrDefaultAsync(s => s.Title.ToLower().Trim() == titleToCheck 
+                                           && s.SongId != song.SongId);
+
+                if (existingSong != null)
+                {
+                    ModelState.AddModelError("Title", "Bài hát với tên này đã tồn tại!");
+                }
+            }
+
+            // Validate file nhạc nếu có upload file mới
+            if (audioFile != null && audioFile.Length > 0)
+            {
+                var allowedExtensions = new[] { ".mp3", ".wav", ".m4a", ".aac", ".ogg" };
+                var fileExtension = Path.GetExtension(audioFile.FileName).ToLower();
+
+                if (!allowedExtensions.Contains(fileExtension))
+                {
+                    ModelState.AddModelError("AudioFile", "Chỉ chấp nhận file nhạc (MP3, WAV, M4A, AAC, OGG)!");
+                }
+
+                if (audioFile.Length > 50 * 1024 * 1024)
+                {
+                    ModelState.AddModelError("AudioFile", "Kích thước file không được vượt quá 50MB!");
+                }
+            }
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    var existingEntity = await _context.Songs.AsNoTracking().FirstOrDefaultAsync(s => s.SongId == id);
+                    if (existingEntity == null)
+                    {
+                        return NotFound();
+                    }
+
+                    // Giữ lại AudioUrl cũ nếu không upload file mới
+                    string oldAudioUrl = existingEntity.AudioUrl;
+                    song.AudioUrl = oldAudioUrl;
+
+                    // Nếu có upload file mới
+                    if (audioFile != null && audioFile.Length > 0)
+                    {
                         // Xóa file cũ nếu tồn tại
-                        if (!string.IsNullOrEmpty(song.AudioUrl))
+                        if (!string.IsNullOrEmpty(oldAudioUrl))
                         {
-                            var oldFilePath = Path.Combine(_environment.WebRootPath, song.AudioUrl.TrimStart('/'));
+                            string oldFilePath = Path.Combine(_webHostEnvironment.WebRootPath, oldAudioUrl.TrimStart('/'));
                             if (System.IO.File.Exists(oldFilePath))
                             {
                                 System.IO.File.Delete(oldFilePath);
                             }
                         }
 
-                        // Cập nhật đường dẫn file mới
-                        song.AudioUrl = "/uploads/songs/" + fileName;
+                        // Upload file mới
+                        string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "songs");
+                        if (!Directory.Exists(uploadsFolder))
+                        {
+                            Directory.CreateDirectory(uploadsFolder);
+                        }
+
+                        string uniqueFileName = Guid.NewGuid().ToString() + "_" + Path.GetFileName(audioFile.FileName);
+                        string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                        using (var fileStream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await audioFile.CopyToAsync(fileStream);
+                        }
+
+                        song.AudioUrl = "/uploads/songs/" + uniqueFileName;
                     }
 
                     _context.Update(song);
                     await _context.SaveChangesAsync();
+                    TempData["SuccessMessage"] = "Cập nhật bài hát thành công!";
+                    return RedirectToAction(nameof(Index));
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!SongExists(song.SongId)) return NotFound();
-                    else throw;
+                    if (!SongExists(song.SongId))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
                 }
-                catch (IOException ex) when (ex.Message.Contains("already exists"))
+                catch (Exception ex)
                 {
-                    ModelState.AddModelError("AudioFile", "File đã tồn tại. Vui lòng thử lại.");
-                    ViewData["ArtistId"] = new SelectList(_context.Artists, "ArtistId", "Name", song.ArtistId);
-                    ViewData["GenreId"] = new SelectList(_context.Genres, "GenreId", "Name", song.GenreId);
-                    return View(song);
+                    ModelState.AddModelError("", "Có lỗi xảy ra khi cập nhật: " + ex.Message);
                 }
-                return RedirectToAction(nameof(Index));
             }
 
-            ViewData["ArtistId"] = new SelectList(_context.Artists, "ArtistId", "Name", song.ArtistId);
-            ViewData["GenreId"] = new SelectList(_context.Genres, "GenreId", "Name", song.GenreId);
+            ViewBag.Artists = await _context.Artists.OrderBy(a => a.Name).ToListAsync();
+            ViewBag.Genres = await _context.Genres.OrderBy(g => g.Name).ToListAsync();
+            ViewBag.Albums = await _context.Albums.Include(a => a.Artist).OrderBy(a => a.Title).ToListAsync();
             return View(song);
         }
 
-        // GET: Songs/Delete/5
+        // GET: Admin/Songs/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null) return NotFound();
+            if (id == null)
+            {
+                return NotFound();
+            }
 
             var song = await _context.Songs
                 .Include(s => s.Artist)
                 .Include(s => s.Genre)
+                .Include(s => s.Album)
                 .FirstOrDefaultAsync(m => m.SongId == id);
 
-            if (song == null) return NotFound();
+            if (song == null)
+            {
+                return NotFound();
+            }
 
             return View(song);
         }
 
-        // POST: Songs/Delete/5
+        // POST: Admin/Songs/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var song = await _context.Songs.FindAsync(id);
-            if (song != null)
+            
+            if (song == null)
             {
-                // Xóa file nhạc khi xóa bài hát
+                return NotFound();
+            }
+
+            try
+            {
+                // Xóa file nhạc nếu tồn tại
                 if (!string.IsNullOrEmpty(song.AudioUrl))
                 {
-                    var filePath = Path.Combine(_environment.WebRootPath, song.AudioUrl.TrimStart('/'));
+                    string filePath = Path.Combine(_webHostEnvironment.WebRootPath, song.AudioUrl.TrimStart('/'));
                     if (System.IO.File.Exists(filePath))
                     {
                         System.IO.File.Delete(filePath);
@@ -264,8 +349,20 @@ namespace Shopify.Areas.Admin.Controllers
 
                 _context.Songs.Remove(song);
                 await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Xóa bài hát thành công!";
+                return RedirectToAction(nameof(Index));
             }
-            return RedirectToAction(nameof(Index));
+            catch (DbUpdateException ex)
+            {
+                // Xử lý lỗi khi bài hát có ràng buộc với dữ liệu khác
+                TempData["ErrorMessage"] = "Không thể xóa bài hát này vì đang có dữ liệu liên quan!";
+                return RedirectToAction(nameof(Delete), new { id = id });
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = "Có lỗi xảy ra khi xóa: " + ex.Message;
+                return RedirectToAction(nameof(Delete), new { id = id });
+            }
         }
 
         private bool SongExists(int id)
