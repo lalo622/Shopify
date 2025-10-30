@@ -1,0 +1,64 @@
+﻿@model Shopify.Models.User
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <title>Đăng ký - Shopify</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: #0e0e0e;
+            color: white;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        .form-container {
+            width: 400px;
+        }
+
+        input, button {
+            width: 100%;
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 6px;
+            border: none;
+        }
+
+        input {
+            background: #1a1a1a;
+            color: white;
+        }
+
+        button {
+            background: #63d7d4;
+            color: black;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h2>Đăng ký để bắt đầu nghe</h2>
+        <form asp-action="Register" method="post">
+            <input asp-for="Username" placeholder="Tên người dùng" />
+            <span asp-validation-for="Username" style="color:red"></span>
+
+            <input asp-for="Email" placeholder="Email" />
+            <span asp-validation-for="Email" style="color:red"></span>
+
+            <input asp-for="PasswordHash" type="password" placeholder="Mật khẩu" />
+            <span asp-validation-for="PasswordHash" style="color:red"></span>
+
+            <button type="submit">Đăng ký</button>
+        </form>
+        <p>Bạn đã có tài khoản? <a href="/Account/Login">Đăng nhập</a></p>
+    </div>
+</body>
+</html>
