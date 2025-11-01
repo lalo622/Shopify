@@ -2,11 +2,11 @@
 @model Song
 
 @{
-    ViewData["Title"] = "Thêm bài hát";
+    ViewData["Title"] = "Chỉnh sửa bài hát";
 }
 
 <div class="container-fluid px-4">
-    <h2 class="mt-4 mb-4">Thêm bài hát mới</h2>
+    <h2 class="mt-4 mb-4">Chỉnh sửa bài hát: @Model.Title</h2>
 
     <!-- HIỂN THỊ THÔNG BÁO THÀNH CÔNG -->
     @if (TempData["SuccessMessage"] != null)
@@ -43,8 +43,24 @@
 
     <div class="card shadow">
         <div class="card-body">
-            <form asp-action="Create" method="post" enctype="multipart/form-data" id="createSongForm">
+            <!-- HIỂN THỊ FILE AUDIO HIỆN TẠI -->
+            @if (!string.IsNullOrEmpty(Model.AudioUrl))
+            {
+                <div class="alert alert-info mb-4">
+                    <h5><i class="fas fa-headphones"></i> File nhạc hiện tại</h5>
+                    <audio controls class="w-100 mt-2">
+                        <source src="@Model.AudioUrl" type="audio/mpeg">
+                        Trình duyệt không hỗ trợ phát nhạc.
+                    </audio>
+                    <small class="text-muted d-block mt-2">
+                        <i class="fas fa-info-circle"></i> Bạn có thể giữ nguyên file này hoặc tải lên file mới bên dưới
+                    </small>
+                </div>
+            }
+
+            <form asp-area="Admin" asp-controller="Songs" asp-action="Edit" method="post" enctype="multipart/form-data" id="editSongForm">
                 @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="SongId" />
                 
                 <div class="row">
                     <!-- Tên bài hát -->
@@ -52,7 +68,7 @@
                         <label asp-for="Title" class="form-label fw-bold">
                             <i class="fas fa-music"></i> Tên bài hát <span class="text-danger">*</span>
                         </label>
-                        <input asp-for="Title" name="Title" class="form-control" placeholder="Nhập tên bài hát" required />
+                        <input asp-for="Title" class="form-control" placeholder="Nhập tên bài hát" required />
                         <span asp-validation-for="Title" class="text-danger"></span>
                     </div>
 
@@ -61,9 +77,9 @@
                         <label asp-for="Duration" class="form-label fw-bold">
                             <i class="fas fa-clock"></i> Thời lượng
                         </label>
-                        <input asp-for="Duration" name="Duration" id="Duration" class="form-control" 
-                               placeholder="Sẽ tự động điền sau khi chọn file nhạc" />
-                        <small class="form-text text-muted">Tự động điền thời lượng từ file nhạc</small>
+                        <input asp-for="Duration" id="Duration" class="form-control" 
+                               placeholder="Tự động cập nhật nếu chọn file mới" />
+                        <small class="form-text text-muted">Thời lượng hiện tại: @(Model.Duration ?? "Chưa có")</small>
                     </div>
                 </div>
 
@@ -72,24 +88,24 @@
                     <label asp-for="Description" class="form-label fw-bold">
                         <i class="fas fa-align-left"></i> Mô tả
                     </label>
-                    <textarea asp-for="Description" name="Description" class="form-control" rows="3" 
+                    <textarea asp-for="Description" class="form-control" rows="3" 
                               placeholder="Nhập mô tả về bài hát (không bắt buộc)"></textarea>
                 </div>
 
-                <!-- File nhạc -->
+                <!-- File nhạc MỚI (tùy chọn) -->
                 <div class="mb-3">
                     <label for="audioFile" class="form-label fw-bold">
-                        <i class="fas fa-file-audio"></i> File nhạc <span class="text-danger">*</span>
+                        <i class="fas fa-file-audio"></i> Thay đổi file nhạc (tùy chọn)
                     </label>
                     <input type="file" name="audioFile" id="audioFile" class="form-control" 
-                           accept=".mp3,.wav,.m4a,.aac,.ogg" required />
+                           accept=".mp3,.wav,.m4a,.aac,.ogg" />
                     <small class="form-text text-muted">
-                        <i class="fas fa-info-circle"></i> Chấp nhận: MP3, WAV, M4A, AAC, OGG (tối đa 50MB)
+                        <i class="fas fa-info-circle"></i> Để trống nếu không muốn thay đổi file nhạc. Chấp nhận: MP3, WAV, M4A, AAC, OGG (tối đa 50MB)
                     </small>
-                    @if (ViewData.ModelState["AudioFile"] != null && ViewData.ModelState["AudioFile"].Errors.Count > 0)
+                    @if (ViewData.ModelState["audioFile"] != null && ViewData.ModelState["audioFile"].Errors.Count > 0)
                     {
                         <div class="text-danger mt-1">
-                            <i class="fas fa-exclamation-circle"></i> @ViewData.ModelState["AudioFile"].Errors.First().ErrorMessage
+                            <i class="fas fa-exclamation-circle"></i> @ViewData.ModelState["audioFile"].Errors.First().ErrorMessage
                         </div>
                     }
                 </div>
@@ -100,18 +116,16 @@
                         <label asp-for="ArtistId" class="form-label fw-bold">
                             <i class="fas fa-user"></i> Nghệ sĩ <span class="text-danger">*</span>
                         </label>
-                        <select asp-for="ArtistId" name="ArtistId" class="form-select" required>
+                        <select asp-for="ArtistId" class="form-select" required>
                             <option value="">-- Chọn nghệ sĩ --</option>
                             @if (ViewBag.Artists != null && ViewBag.Artists.Count > 0)
                             {
                                 foreach (var artist in ViewBag.Artists)
                                 {
-                                    <option value="@artist.ArtistId">@artist.Name</option>
+                                    <option value="@artist.ArtistId" selected="@(artist.ArtistId == Model.ArtistId)">
+                                        @artist.Name
+                                    </option>
                                 }
-                            }
-                            else
-                            {
-                                <option value="" disabled>Không có nghệ sĩ nào</option>
                             }
                         </select>
                         <span asp-validation-for="ArtistId" class="text-danger"></span>
@@ -122,18 +136,16 @@
                         <label asp-for="GenreId" class="form-label fw-bold">
                             <i class="fas fa-guitar"></i> Thể loại <span class="text-danger">*</span>
                         </label>
-                        <select asp-for="GenreId" name="GenreId" class="form-select" required>
+                        <select asp-for="GenreId" class="form-select" required>
                             <option value="">-- Chọn thể loại --</option>
                             @if (ViewBag.Genres != null && ViewBag.Genres.Count > 0)
                             {
                                 foreach (var genre in ViewBag.Genres)
                                 {
-                                    <option value="@genre.GenreId">@genre.Name</option>
+                                    <option value="@genre.GenreId" selected="@(genre.GenreId == Model.GenreId)">
+                                        @genre.Name
+                                    </option>
                                 }
-                            }
-                            else
-                            {
-                                <option value="" disabled>Không có thể loại nào</option>
                             }
                         </select>
                         <span asp-validation-for="GenreId" class="text-danger"></span>
@@ -144,13 +156,13 @@
                         <label asp-for="AlbumId" class="form-label fw-bold">
                             <i class="fas fa-compact-disc"></i> Album (tùy chọn)
                         </label>
-                        <select asp-for="AlbumId" name="AlbumId" class="form-select">
+                        <select asp-for="AlbumId" class="form-select">
                             <option value="">-- Không thuộc album --</option>
                             @if (ViewBag.Albums != null && ViewBag.Albums.Count > 0)
                             {
                                 foreach (var album in ViewBag.Albums)
                                 {
-                                    <option value="@album.AlbumId">
+                                    <option value="@album.AlbumId" selected="@(album.AlbumId == Model.AlbumId)">
                                         @album.Title (@album.Artist?.Name)
                                     </option>
                                 }
@@ -163,11 +175,14 @@
 
                 <!-- Buttons -->
                 <div class="d-flex gap-2">
-                    <button type="submit" class="btn btn-success">
-                        <i class="fas fa-save"></i> Lưu bài hát
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Lưu thay đổi
                     </button>
                     <a asp-action="Index" class="btn btn-secondary">
                         <i class="fas fa-times"></i> Hủy
+                    </a>
+                    <a asp-action="Details" asp-route-id="@Model.SongId" class="btn btn-info">
+                        <i class="fas fa-eye"></i> Xem chi tiết
                     </a>
                 </div>
             </form>
@@ -177,22 +192,34 @@
 
 @section Scripts {
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    @* Tạm thời comment để test *@
-    @* @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); } *@
     
     <script>
+        // Lưu giá trị ban đầu để so sánh
+        const originalValues = {
+            title: '@Model.Title',
+            description: '@(Model.Description ?? "")',
+            artistId: '@Model.ArtistId',
+            genreId: '@Model.GenreId',
+            albumId: '@(Model.AlbumId?.ToString() ?? "")',
+            duration: '@(Model.Duration ?? "")'
+        };
+
+        let hasFileChange = false;
+
         // Script xử lý file audio
         document.getElementById('audioFile').addEventListener('change', function(e) {
             const file = e.target.files[0];
             const durationInput = document.getElementById('Duration');
             
             if (file) {
+                hasFileChange = true;
+                
                 // Kiểm tra kích thước file
                 const maxSize = 50 * 1024 * 1024; // 50MB
                 if (file.size > maxSize) {
                     alert('⚠️ File quá lớn! Kích thước tối đa là 50MB.');
                     e.target.value = '';
-                    durationInput.value = '';
+                    hasFileChange = false;
                     return;
                 }
                 
@@ -203,7 +230,7 @@
                 if (!allowedExtensions.includes(fileExtension)) {
                     alert('⚠️ Chỉ chấp nhận file nhạc: MP3, WAV, M4A, AAC, OGG');
                     e.target.value = '';
-                    durationInput.value = '';
+                    hasFileChange = false;
                     return;
                 }
                 
@@ -221,16 +248,14 @@
                             seconds.toString().padStart(2, '0');
                         
                         durationInput.value = formattedDuration;
-                        console.log('✅ Thời lượng:', formattedDuration);
+                        console.log('✅ Thời lượng mới:', formattedDuration);
                     }
                 }).catch(error => {
                     console.error('❌ Lỗi khi lấy thời lượng:', error);
-                    durationInput.readOnly = false;
-                    durationInput.placeholder = 'Nhập thời lượng (hh:mm:ss)';
-                    alert('⚠️ Không thể đọc thời lượng file. Vui lòng nhập thủ công.');
+                    alert('⚠️ Không thể đọc thời lượng file. Giữ nguyên thời lượng cũ.');
                 });
             } else {
-                durationInput.value = '';
+                hasFileChange = false;
             }
         });
 
@@ -259,6 +284,35 @@
                 }, 10000);
             });
         }
+
+        // Kiểm tra thay đổi trước khi submit
+        document.getElementById('editSongForm').addEventListener('submit', function(e) {
+            const currentValues = {
+                title: document.querySelector('[name="Title"]').value,
+                description: document.querySelector('[name="Description"]').value,
+                artistId: document.querySelector('[name="ArtistId"]').value,
+                genreId: document.querySelector('[name="GenreId"]').value,
+                albumId: document.querySelector('[name="AlbumId"]').value,
+                duration: document.querySelector('[name="Duration"]').value
+            };
+
+            // So sánh các giá trị
+            const hasChanges = 
+                currentValues.title !== originalValues.title ||
+                currentValues.description !== originalValues.description ||
+                currentValues.artistId !== originalValues.artistId ||
+                currentValues.genreId !== originalValues.genreId ||
+                currentValues.albumId !== originalValues.albumId ||
+                currentValues.duration !== originalValues.duration ||
+                hasFileChange;
+
+            if (!hasChanges) {
+                e.preventDefault();
+                alert('ℹ️ Không có thay đổi nào được thực hiện!');
+                window.location.href = '@Url.Action("Index", "Songs", new { area = "Admin" })';
+                return false;
+            }
+        });
 
         // Auto dismiss alerts sau 5 giây
         setTimeout(function() {

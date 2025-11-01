@@ -5,36 +5,137 @@
     ViewData["Title"] = "Danh sách bài hát";
 }
 
-<h2 class="mb-3">Danh sách bài hát</h2>
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Danh sách bài hát</h2>
+        <a class="btn btn-primary" asp-area="Admin" asp-controller="Songs" asp-action="Create">
+            <i class="bi bi-plus-circle"></i> Thêm bài hát
+        </a>
+    </div>
 
-<p>
-    <a class="btn btn-primary" href="/Admin/Songs/Create">+ Thêm bài hát</a>
-</p>
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
 
-<table class="table table-bordered table-striped">
-    <thead>
-        <tr>
-            <th>Tiêu đề</th>
-            <th>Nghệ sĩ</th>
-            <th>Thể loại</th>
-            <th>Thời lượng</th>
-            <th>Thao tác</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model)
-        {
-            <tr>
-                <td>@item.Title</td>
-                <td>@item.Artist?.Name</td>
-                <td>@item.Genre?.Name</td>
-                <td>@(string.IsNullOrEmpty(item.Duration) ? "-" : item.Duration)</td>
-                <td>
-                    <a asp-action="Details" asp-route-id="@item.SongId" class="btn btn-info btn-sm">Chi tiết</a>
-                    <a asp-action="Edit" asp-route-id="@item.SongId" class="btn btn-warning btn-sm">Sửa</a>
-                    <a asp-action="Delete" asp-route-id="@item.SongId" class="btn btn-danger btn-sm">Xóa</a>
-                </td>
-            </tr>
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle"></i> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="card shadow">
+        <div class="card-body">
+            <table class="table table-bordered table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>STT</th>
+                        <th>Tiêu đề</th>
+                        <th>Nghệ sĩ</th>
+                        <th>Thể loại</th>
+                        <th>Album</th>
+                        <th>Thời lượng</th>
+                        <th style="width: 250px;">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Any())
+                    {
+                        int stt = 1;
+                        foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@stt</td>
+                                <td><strong>@item.Title</strong></td>
+                                <td>@(item.Artist?.Name ?? "N/A")</td>
+                                <td><span class="badge bg-secondary">@(item.Genre?.Name ?? "N/A")</span></td>
+                                <td>@(item.Album?.Title ?? "-")</td>
+                                <td>@(string.IsNullOrEmpty(item.Duration) ? "-" : item.Duration)</td>
+                                <td>
+                                    <a href="/Admin/Songs/Detail/@item.SongId" class="btn btn-info btn-sm">
+                                        <i class="bi bi-eye"></i> Chi tiết
+                                    </a>
+                                    <a href="/Admin/Songs/Edit/@item.SongId" class="btn btn-warning btn-sm">
+                                        <i class="bi bi-pencil"></i> Sửa
+                                    </a>
+                                    <button type="button" 
+                                            class="btn btn-danger btn-sm" 
+                                            onclick="showDeleteModal(@item.SongId, '@item.Title')">
+                                        <i class="bi bi-trash"></i> Xóa
+                                    </button>
+                                </td>
+                            </tr>
+                            stt++;
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center text-muted">
+                                <i class="bi bi-inbox"></i> Chưa có bài hát nào
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal xác nhận xóa -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-exclamation-triangle"></i> Xác nhận xóa
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                Bạn có chắc chắn muốn xóa bài hát "<strong id="songTitle"></strong>" không?
+                <br><small class="text-danger">⚠️ Hành động này không thể hoàn tác!</small>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle"></i> Hủy
+                </button>
+                <form id="deleteForm" method="post">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash"></i> Xác nhận xóa
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let deleteModalInstance = null;
+        
+        // Khởi tạo modal khi trang load
+        document.addEventListener('DOMContentLoaded', function() {
+            const deleteModalElement = document.getElementById('deleteModal');
+            if (deleteModalElement) {
+                deleteModalInstance = new bootstrap.Modal(deleteModalElement);
+            }
+        });
+        
+        // Hàm hiển thị modal xóa
+        function showDeleteModal(songId, songTitle) {
+            document.getElementById('songTitle').textContent = songTitle;
+            document.getElementById('deleteForm').action = '/Admin/Songs/Delete/' + songId;
+            
+            if (deleteModalInstance) {
+                deleteModalInstance.show();
+            }
         }
-    </tbody>
-</table>
+    </script>
+}

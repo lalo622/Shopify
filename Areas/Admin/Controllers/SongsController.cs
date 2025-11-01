@@ -182,7 +182,7 @@ namespace Shopify.Areas.Admin.Controllers
         }
 
         // POST: Admin/Songs/Edit/5
-        [HttpPost]
+        [HttpPost("Edit/{id}")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, Song song, IFormFile? audioFile)
         {
@@ -197,13 +197,32 @@ namespace Shopify.Areas.Admin.Controllers
             ModelState.Remove("Album");
             ModelState.Remove("AudioUrl");
 
+            // Lấy bài hát cũ từ database
+            var existingEntity = await _context.Songs.AsNoTracking().FirstOrDefaultAsync(s => s.SongId == id);
+            if (existingEntity == null)
+            {
+                return NotFound();
+            }
+
+            // Nếu không có thay đổi, chỉ redirect về Index
+            if (song.Title == existingEntity.Title &&
+                song.Description == existingEntity.Description &&
+                song.ArtistId == existingEntity.ArtistId &&
+                song.GenreId == existingEntity.GenreId &&
+                song.AlbumId == existingEntity.AlbumId &&
+                song.Duration == existingEntity.Duration &&
+                (audioFile == null || audioFile.Length == 0))
+            {
+                return RedirectToAction(nameof(Index));
+            }
+
             // Kiểm tra trùng tên bài hát (trừ chính nó) - FIX NULL
             if (!string.IsNullOrWhiteSpace(song.Title))
             {
                 var titleToCheck = song.Title.Trim().ToLower();
                 var existingSong = await _context.Songs
                     .FirstOrDefaultAsync(s => s.Title.ToLower().Trim() == titleToCheck 
-                                           && s.SongId != song.SongId);
+                                        && s.SongId != song.SongId);
 
                 if (existingSong != null)
                 {
@@ -219,12 +238,12 @@ namespace Shopify.Areas.Admin.Controllers
 
                 if (!allowedExtensions.Contains(fileExtension))
                 {
-                    ModelState.AddModelError("AudioFile", "Chỉ chấp nhận file nhạc (MP3, WAV, M4A, AAC, OGG)!");
+                    ModelState.AddModelError("audioFile", "Chỉ chấp nhận file nhạc (MP3, WAV, M4A, AAC, OGG)!");
                 }
 
                 if (audioFile.Length > 50 * 1024 * 1024)
                 {
-                    ModelState.AddModelError("AudioFile", "Kích thước file không được vượt quá 50MB!");
+                    ModelState.AddModelError("audioFile", "Kích thước file không được vượt quá 50MB!");
                 }
             }
 
@@ -232,12 +251,6 @@ namespace Shopify.Areas.Admin.Controllers
             {
                 try
                 {
-                    var existingEntity = await _context.Songs.AsNoTracking().FirstOrDefaultAsync(s => s.SongId == id);
-                    if (existingEntity == null)
-                    {
-                        return NotFound();
-                    }
-
                     // Giữ lại AudioUrl cũ nếu không upload file mới
                     string oldAudioUrl = existingEntity.AudioUrl;
                     song.AudioUrl = oldAudioUrl;
