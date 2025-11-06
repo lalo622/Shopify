@@ -1,0 +1,232 @@
+﻿@model List<Shopify.Models.Artist>
+
+@{
+    ViewData["Title"] = "Quản lý ca sĩ";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+    <div class="container-fluid page-bg">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12 d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="fw-bold text-pink mb-1">
+                        <i class="fas fa-microphone me-2"></i>Quản lý ca sĩ
+                    </h3>
+                    <p class="text-muted mb-0">Theo dõi, chỉnh sửa và cập nhật thông tin ca sĩ</p>
+                </div>
+                <a href="/Admin/Artist/Create" class="btn btn-pink shadow-sm">
+                    <i class="fas fa-plus me-1"></i> Thêm ca sĩ
+                </a>
+            </div>
+        </div>
+
+        <!-- Thông báo -->
+        @if (!string.IsNullOrEmpty(ViewBag.Error))
+        {
+            <div class="alert alert-danger alert-dismissible fade show">
+                <i class="fas fa-exclamation-circle me-2"></i>@ViewBag.Error
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+
+        @if (TempData["success"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show">
+                <i class="fas fa-check-circle me-2"></i>@TempData["success"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+
+        <!-- Bảng danh sách ca sĩ -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-header text-white fw-bold pink-header">
+                <i class="fas fa-list me-2"></i>Danh sách ca sĩ (@Model.Count mục)
+            </div>
+            <div class="card-body p-0 bg-white rounded-bottom">
+                @if (Model.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0 text-center">
+                            <thead class="pink-table-header">
+                                <tr>
+                                    <th>Hình ảnh</th>
+                                    <th>Tên ca sĩ</th>
+                                    <th>Quốc gia</th>
+                                    <th>Ngày sinh</th>
+                                    <th>Trạng thái</th>
+                                    <th width="150">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var artist in Model)
+                                {
+                                    <tr>
+                                        <td>
+                                            @if (!string.IsNullOrEmpty(artist.ImageUrl))
+                                            {
+                                                <img src="@artist.ImageUrl" alt="@artist.Name"
+                                                     class="rounded shadow-sm" style="width:60px; height:60px; object-fit:cover;">
+                                            }
+                                            else
+                                            {
+                                                <div class="bg-light rounded d-flex justify-content-center align-items-center" style="width:60px; height:60px;">
+                                                    <i class="fas fa-user text-muted"></i>
+                                                </div>
+                                            }
+                                        </td>
+                                        <td>
+                                            <strong class="text-dark">@artist.Name</strong><br />
+                                            <small class="text-muted">@artist.MoTa</small>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-pink-light">@artist.QuocGia ?? "N/A"</span>
+                                        </td>
+                                        <td>@(artist.NgaySinh?.ToString("dd/MM/yyyy") ?? "N/A")</td>
+                                        <td class="status-cell">
+                                            <span class="badge @(artist.IsActive ? "bg-success" : "bg-secondary")">
+                                                @(artist.IsActive ? "Hiển thị" : "Ẩn")
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                <a href="/Admin/Artist/Edit/@artist.Id"
+                                                   class="btn btn-outline-pink" data-bs-toggle="tooltip" title="Chỉnh sửa">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <button class="btn @(artist.IsActive ? "btn-outline-danger" : "btn-outline-secondary")"
+                                                        onclick="toggleStatus(@artist.Id, this)"
+                                                        data-bs-toggle="tooltip" title="Ẩn / Hiện ca sĩ">
+                                                    <i class="fas @(artist.IsActive ? "fa-eye" : "fa-eye-slash")"></i>
+                                                </button>
+                                                <button class="btn btn-outline-danger"
+                                                        onclick="deleteArtist(@artist.Id, this)"
+                                                        data-bs-toggle="tooltip" title="Xóa ca sĩ">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-5">
+                        <i class="fas fa-user-slash fa-3x text-muted mb-3"></i>
+                        <h6 class="text-muted">Không có ca sĩ nào được tìm thấy.</h6>
+                        <a href="/Admin/Artist/Create" class="btn btn-pink mt-2">
+                            <i class="fas fa-plus me-1"></i>Thêm ca sĩ mới
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+@section Scripts {
+        <script>
+            // Tooltip
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl)
+            });
+
+            // Toggle trạng thái hiển thị/ẩn
+            function toggleStatus(id, btn) {
+                fetch(`/Admin/Artist/ToggleActive/${id}`, { method: 'POST' })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            const row = btn.closest("tr");
+                            const statusCell = row.querySelector(".status-cell span");
+                            if (data.isActive) {
+                                statusCell.textContent = "Hiển thị";
+                                statusCell.classList.replace("bg-secondary", "bg-success");
+                                btn.querySelector("i").classList.replace("fa-eye-slash", "fa-eye");
+                                btn.classList.replace("btn-outline-secondary", "btn-outline-danger");
+                            } else {
+                                statusCell.textContent = "Ẩn";
+                                statusCell.classList.replace("bg-success", "bg-secondary");
+                                btn.querySelector("i").classList.replace("fa-eye", "fa-eye-slash");
+                                btn.classList.replace("btn-outline-danger", "btn-outline-secondary");
+                            }
+                        } else {
+                            alert("Không thể đổi trạng thái ca sĩ!");
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        alert("Lỗi kết nối đến server!");
+                    });
+            }
+                              function deleteArtist(id, btn) {
+                if (confirm("Bạn có chắc muốn xóa ca sĩ này không?")) {
+                    fetch(`/Admin/Artist/DeleteConfirmed/${id}`, {
+                        method: 'POST'
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            const row = btn.closest('tr');
+                            row.remove();
+                        } else {
+                            alert(data.message || "Không thể xóa ca sĩ!");
+                        }
+                    })
+                    .catch(err => console.error(err));
+                }
+            }
+        </script>
+}
+
+    <style>
+        .page-bg {
+            background-color: #ffe6f0;
+            padding: 30px;
+            border-radius: 12px;
+        }
+
+        .pink-header {
+            background: linear-gradient(90deg, #ff66a3, #ff3385);
+            color: #fff;
+        }
+
+        .pink-table-header {
+            background-color: #ffb6c1;
+            color: #6b1f3a;
+            font-weight: 600;
+        }
+
+        .bg-pink-light {
+            background-color: #ffd6e8;
+            color: #b30059;
+        }
+
+        .btn-pink {
+            background-color: #ff66a3;
+            color: #fff;
+            border: none;
+        }
+
+        .btn-pink:hover {
+            background-color: #e05590;
+            color: #fff;
+        }
+
+        .btn-outline-pink {
+            border: 1px solid #ff66a3;
+            color: #ff66a3;
+        }
+
+        .btn-outline-pink:hover {
+            background-color: #ff66a3;
+            color: white;
+        }
+
+        .text-pink {
+            color: #d63384 !important;
+        }
+    </style>
