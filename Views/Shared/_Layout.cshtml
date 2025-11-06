@@ -1,4 +1,8 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Authorization
+@using System.Security.Claims
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -7,25 +11,62 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/WebApplication1.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">WebApplication1</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
+        <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #1E1E1E; padding: 10px 30px;">
+            <div class="container-fluid d-flex align-items-center justify-content-between">
+                <!-- Logo -->
+                <div class="d-flex align-items-center">
+                    <span class="navbar-brand fw-bold text-white" style="font-size: 1.4rem;">Shopify</span>
+
+                    <!-- Home icon -->
+                    <a asp-controller="Home" asp-action="Index" class="btn btn-link text-white ms-3" style="text-decoration:none;">
+                        <i class="bi bi-house-door-fill fs-4" style="color:#d9d2cf;"></i>
+                    </a>
+                </div>
+
+                <!-- Search bar -->
+                <div class="d-flex align-items-center flex-grow-1 mx-4" style="max-width: 600px;">
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-0 rounded-start-pill">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input type="text" class="form-control border-0 rounded-end-pill" placeholder="Bạn muốn phát nội dung gì?" />
+                    </div>
+                </div>
+
+                <!-- Right side -->
+                <div class="d-flex align-items-center">
+                    <a href="#" class="text-white me-3 fw-semibold">Premium</a>
+
+                    @if (User.Identity != null && User.Identity.IsAuthenticated)
+                    {
+                        <!-- Khi đã đăng nhập -->
+                        <div class="dropdown">
+                            <button class="btn btn-link text-white" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="text-decoration:none;">
+                                <i class="bi bi-person-circle fs-4"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end mt-2" aria-labelledby="userDropdown"
+                                style="background-color:#3a3a3a; border:none; border-radius:20px; padding:10px; min-width:180px;">
+                                <li><a class="dropdown-item text-white" href="#">Tài khoản</a></li>
+                                <li><a class="dropdown-item text-white" href="#">Nâng cấp premium</a></li>
+                                <li><hr class="dropdown-divider bg-light"></li>
+                                <li>
+                                    <form asp-controller="Account" asp-action="Logout" method="post" style="margin:0;">
+                                        <button type="submit" class="dropdown-item text-white">Đăng xuất</button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    }
+                    else
+                    {
+                        <!-- Khi chưa đăng nhập -->
+                        <a asp-controller="Account" asp-action="Register" class="text-white me-3 fw-semibold">Đăng ký</a>
+                        <a asp-controller="Account" asp-action="Login" class="btn btn-light fw-semibold px-3 rounded-pill">Đăng nhập</a>
+                    }
                 </div>
             </div>
         </nav>

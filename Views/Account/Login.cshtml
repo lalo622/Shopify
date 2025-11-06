@@ -1,5 +1,5 @@
 ﻿@{
-    Layout = null;
+    Layout = "_Layout";
 }
 <!DOCTYPE html>
 <html lang="vi">
@@ -7,22 +7,55 @@
     <meta charset="utf-8" />
     <title>Đăng nhập - Shopify</title>
     <style>
-        body { background: #0e0e0e; color: white; font-family: 'Inter', sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; }
-        .form-container { width: 400px; }
-        input, button { width: 100%; margin-top: 10px; padding: 10px; border-radius: 6px; border: none; }
-        input { background: #1a1a1a; color: white; }
-        button { background: #63d7d4; color: black; font-weight: 600; }
+        body {
+            background: #0e0e0e;
+            color: white;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* CSS MỚI: Dùng thẻ bọc ngoài để căn giữa nội dung chính */
+        .main-content-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh; /* Đảm bảo wrapper chiếm toàn bộ chiều cao màn hình */
+        }
+
+        .form-container {
+            width: 400px;
+        }
+
+        input, button {
+            width: 100%;
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 6px;
+            border: none;
+        }
+
+        input {
+            background: #1a1a1a;
+            color: white;
+        }
+
+        button {
+            background: #63d7d4;
+            color: black;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
-    <div class="form-container">
-        <h2>Đăng nhập vào Shopify</h2>
-        <form asp-action="Login" method="post">
-            <input type="email" name="email" placeholder="Email" required />
-            <input type="password" name="password" placeholder="Mật khẩu" required />
-            <button type="submit">Đăng nhập</button>
-        </form>
-        <p>Bạn chưa có tài khoản? <a href="/Account/Register">Đăng ký</a></p>
+    <div class="main-content-wrapper">
+        <div class="form-container">
+            <h2>Đăng nhập vào Shopify</h2>
+            <form asp-action="Login" method="post">
+                <input type="email" name="email" placeholder="Email" required />
+                <input type="password" name="password" placeholder="Mật khẩu" required />
+                <button type="submit">Đăng nhập</button>
+            </form>
+            <p>Bạn chưa có tài khoản? <a href="/Account/Register">Đăng ký</a></p>
+        </div>
     </div>
 </body>
 </html>

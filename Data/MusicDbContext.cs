@@ -12,6 +12,8 @@ namespace Shopify.Data
         public DbSet<Song> Songs { get; set; }
         public DbSet<Genre> Genres { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<Premium> Premiums { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

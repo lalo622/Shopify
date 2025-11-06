@@ -1,0 +1,50 @@
+﻿@model IEnumerable<Shopify.Models.Premium>
+
+@{
+    ViewData["Title"] = "Quản lý Gói Premium";
+}
+
+<h2>Quản lý Gói Premium</h2>
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Tạo Gói Mới</a>
+</p>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>@Html.DisplayNameFor(model => model.Name)</th>
+            <th>@Html.DisplayNameFor(model => model.Price)</th>
+            <th>@Html.DisplayNameFor(model => model.DurationDays)</th>
+            <th>@Html.DisplayNameFor(model => model.IsActive)</th>
+            <th>@Html.DisplayNameFor(model => model.CreatedAt)</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@Html.DisplayFor(modelItem => item.Name)</td>
+                <td>@string.Format("{0:N0}", item.Price) VNĐ</td>
+                <td>@Html.DisplayFor(modelItem => item.DurationDays) ngày</td>
+                <td>
+                    @if (item.IsActive)
+                    {
+                        <span class="badge bg-success">Đang hoạt động</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-danger">Đã khóa</span>
+                    }
+                </td>
+                <td>@Html.DisplayFor(modelItem => item.CreatedAt)</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.PremiumId" class="btn btn-sm btn-info">Sửa</a> |
+                    <a asp-action="Details" asp-route-id="@item.PremiumId" class="btn btn-sm btn-secondary">Chi tiết</a> |
+                    <a asp-action="Delete" asp-route-id="@item.PremiumId" class="btn btn-sm btn-danger">Xóa</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

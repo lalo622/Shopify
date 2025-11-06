@@ -1,6 +1,6 @@
 ﻿@model Shopify.Models.User
 @{
-    Layout = null;
+    Layout = "_Layout";
 }
 <!DOCTYPE html>
 <html lang="vi">
@@ -13,10 +13,16 @@
             background: #0e0e0e;
             color: white;
             font-family: 'Inter', sans-serif;
+            /* ĐÃ XÓA: display: flex, align-items, justify-content, height: 100vh; */
+        }
+
+        /* CSS MỚI: Dùng thẻ bọc ngoài để căn giữa riêng nội dung form */
+        .centered-content {
             display: flex;
             align-items: center;
             justify-content: center;
-            height: 100vh;
+            min-height: calc(100vh - 50px); /* 100vh trừ đi chiều cao của Bottom Nav (ví dụ 50px) */
+            /* Hoặc dùng min-height: 100vh; nếu Bottom Nav là fixed/absolute */
         }
 
         .form-container {
@@ -44,21 +50,23 @@
     </style>
 </head>
 <body>
-    <div class="form-container">
-        <h2>Đăng ký để bắt đầu nghe</h2>
-        <form asp-action="Register" method="post">
-            <input asp-for="Username" placeholder="Tên người dùng" />
-            <span asp-validation-for="Username" style="color:red"></span>
+    <div class="centered-content">
+        <div class="form-container">
+            <h2>Đăng ký để bắt đầu nghe</h2>
+            <form asp-action="Register" method="post">
+                <input asp-for="Username" placeholder="Tên người dùng" />
+                <span asp-validation-for="Username" style="color:red"></span>
 
-            <input asp-for="Email" placeholder="Email" />
-            <span asp-validation-for="Email" style="color:red"></span>
+                <input asp-for="Email" placeholder="Email" />
+                <span asp-validation-for="Email" style="color:red"></span>
 
-            <input asp-for="PasswordHash" type="password" placeholder="Mật khẩu" />
-            <span asp-validation-for="PasswordHash" style="color:red"></span>
+                <input asp-for="PasswordHash" type="password" placeholder="Mật khẩu" />
+                <span asp-validation-for="PasswordHash" style="color:red"></span>
 
-            <button type="submit">Đăng ký</button>
-        </form>
-        <p>Bạn đã có tài khoản? <a href="/Account/Login">Đăng nhập</a></p>
+                <button type="submit">Đăng ký</button>
+            </form>
+            <p>Bạn đã có tài khoản? <a href="/Account/Login">Đăng nhập</a></p>
+        </div>
     </div>
 </body>
 </html>
