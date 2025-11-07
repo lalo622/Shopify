@@ -35,17 +35,18 @@ namespace Shopify.Controllers
             }
 
             var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.Name, user.Username),
-                new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Role, user.Role.ToString())
-            };
+    {
+        new Claim("UserId", user.Id.ToString()), // 🔥 thêm dòng này
+        new Claim(ClaimTypes.Name, user.Username),
+        new Claim(ClaimTypes.Email, user.Email),
+        new Claim(ClaimTypes.Role, user.Role.ToString())
+    };
 
             var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
 
             var authProperties = new AuthenticationProperties
             {
-                IsPersistent = true // cookie sẽ tồn tại cho đến khi logout
+                IsPersistent = true
             };
 
             await HttpContext.SignInAsync(
@@ -56,6 +57,7 @@ namespace Shopify.Controllers
 
             return RedirectToAction("Index", "Home");
         }
+
 
         // ======== REGISTER ========
 

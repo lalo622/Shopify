@@ -39,8 +39,6 @@
 
                 <!-- Right side -->
                 <div class="d-flex align-items-center">
-                    <a href="#" class="text-white me-3 fw-semibold">Premium</a>
-
                     @if (User.Identity != null && User.Identity.IsAuthenticated)
                     {
                         <!-- Khi đã đăng nhập -->
@@ -51,7 +49,7 @@
                             <ul class="dropdown-menu dropdown-menu-end mt-2" aria-labelledby="userDropdown"
                                 style="background-color:#3a3a3a; border:none; border-radius:20px; padding:10px; min-width:180px;">
                                 <li><a class="dropdown-item text-white" href="#">Tài khoản</a></li>
-                                <li><a class="dropdown-item text-white" href="#">Nâng cấp premium</a></li>
+                                <li><a class="dropdown-item text-white" href="/Premium/Index">Nâng cấp premium</a></li>
                                 <li><hr class="dropdown-divider bg-light"></li>
                                 <li>
                                     <form asp-controller="Account" asp-action="Logout" method="post" style="margin:0;">

@@ -1,27 +1,88 @@
 ﻿@model Shopify.Models.Premium
+
 @{
-    ViewData["Title"] = "Chi tiết gói VIP";
-    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+    ViewData["Title"] = "Chi tiết Gói Premium";
 }
 
-<h2>@Model.Name</h2>
+<div class="container-fluid px-4">
+    <h2 class="mt-4 mb-4">
+        <i class="fas fa-info-circle"></i> Chi tiết gói Premium
+    </h2>
 
-<dl class="row">
-    <dt class="col-sm-3">Giá:</dt>
-    <dd class="col-sm-9">@Model.Price.ToString("N0") VNĐ</dd>
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card shadow">
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-4">
+                            <i class="fas fa-tag"></i> Tên gói
+                        </dt>
+                        <dd class="col-sm-8">
+                            @Html.DisplayFor(model => model.Name)
+                        </dd>
 
-    <dt class="col-sm-3">Thời hạn:</dt>
-    <dd class="col-sm-9">@Model.DurationDays ngày</dd>
+                        <dt class="col-sm-4">
+                            <i class="fas fa-dollar-sign"></i> Giá
+                        </dt>
+                        <dd class="col-sm-8">
+                            @string.Format("{0:N0}", Model.Price) VNĐ
+                        </dd>
 
-    <dt class="col-sm-3">Mô tả:</dt>
-    <dd class="col-sm-9">@Model.Description</dd>
+                        <dt class="col-sm-4">
+                            <i class="fas fa-clock"></i> Thời hạn
+                        </dt>
+                        <dd class="col-sm-8">
+                            @Html.DisplayFor(model => model.DurationDays) ngày
+                        </dd>
 
-    <dt class="col-sm-3">Kích hoạt:</dt>
-    <dd class="col-sm-9">@(Model.IsActive ? "Có" : "Không")</dd>
+                        <dt class="col-sm-4">
+                            <i class="fas fa-align-left"></i> Mô tả
+                        </dt>
+                        <dd class="col-sm-8">
+                            @if (!string.IsNullOrWhiteSpace(Model.Description))
+                            {
+                                @Html.DisplayFor(model => model.Description)
+                            }
+                            else
+                            {
+                                <span class="text-muted">Không có mô tả</span>
+                            }
+                        </dd>
 
-    <dt class="col-sm-3">Ngày tạo:</dt>
-    <dd class="col-sm-9">@Model.CreatedAt.ToString("dd/MM/yyyy")</dd>
-</dl>
+                        <dt class="col-sm-4">
+                            <i class="fas fa-check-circle"></i> Trạng thái
+                        </dt>
+                        <dd class="col-sm-8">
+                            @if (Model.IsActive)
+                            {
+                                <span class="badge bg-success">Đang hoạt động</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">Đã khóa</span>
+                            }
+                        </dd>
 
-<a asp-action="Edit" asp-route-id="@Model.PremiumId" class="btn btn-warning">Chỉnh sửa</a>
-<a asp-action="Index" class="btn btn-secondary">Trở lại</a>
+                        <dt class="col-sm-4">
+                            <i class="fas fa-calendar-plus"></i> Ngày tạo
+                        </dt>
+                        <dd class="col-sm-8">
+                            @Html.DisplayFor(model => model.CreatedAt)
+                        </dd>
+                    </dl>
+
+                    <hr class="my-4" />
+
+                    <div class="d-flex gap-2">
+                        <a asp-action="Edit" asp-route-id="@Model.PremiumId" class="btn btn-primary">
+                            <i class="fas fa-edit"></i> Chỉnh sửa
+                        </a>
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Quay lại
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

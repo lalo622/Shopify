@@ -1,24 +1,35 @@
 ﻿@model IEnumerable<Shopify.Models.Premium>
 
+
 @{
     ViewData["Title"] = "Quản lý Gói Premium";
 }
 
 <h2>Quản lý Gói Premium</h2>
 
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
 <p>
-    <a asp-action="Create" class="btn btn-primary">Tạo Gói Mới</a>
+    <a asp-area="Admin" asp-controller="Premiums" asp-action="Create" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Tạo Gói Mới
+    </a>
 </p>
 
-<table class="table table-striped">
-    <thead>
+<table class="table table-striped table-hover">
+    <thead class="table-dark">
         <tr>
-            <th>@Html.DisplayNameFor(model => model.Name)</th>
-            <th>@Html.DisplayNameFor(model => model.Price)</th>
-            <th>@Html.DisplayNameFor(model => model.DurationDays)</th>
-            <th>@Html.DisplayNameFor(model => model.IsActive)</th>
-            <th>@Html.DisplayNameFor(model => model.CreatedAt)</th>
-            <th></th>
+            <th>Tên gói</th>
+            <th>Giá</th>
+            <th>Thời hạn</th>
+            <th>Trạng thái</th>
+            <th>Ngày tạo</th>
+            <th>Thao tác</th>
         </tr>
     </thead>
     <tbody>
@@ -38,11 +49,22 @@
                         <span class="badge bg-danger">Đã khóa</span>
                     }
                 </td>
-                <td>@Html.DisplayFor(modelItem => item.CreatedAt)</td>
+                <td>@item.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
                 <td>
-                    <a asp-action="Edit" asp-route-id="@item.PremiumId" class="btn btn-sm btn-info">Sửa</a> |
-                    <a asp-action="Details" asp-route-id="@item.PremiumId" class="btn btn-sm btn-secondary">Chi tiết</a> |
-                    <a asp-action="Delete" asp-route-id="@item.PremiumId" class="btn btn-sm btn-danger">Xóa</a>
+                    <div class="btn-group" role="group">
+                        <a asp-area="Admin" asp-controller="Premiums" asp-action="Edit" asp-route-id="@item.PremiumId"
+                           class="btn btn-sm btn-info" title="Sửa">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <a asp-area="Admin" asp-controller="Premiums" asp-action="Details" asp-route-id="@item.PremiumId"
+                           class="btn btn-sm btn-secondary" title="Chi tiết">
+                            <i class="fas fa-info-circle"></i>
+                        </a>
+                        <a asp-area="Admin" asp-controller="Premiums" asp-action="Delete" asp-route-id="@item.PremiumId"
+                           class="btn btn-sm btn-danger" title="Xóa">
+                            <i class="fas fa-trash-alt"></i>
+                        </a>
+                    </div>
                 </td>
             </tr>
         }

@@ -1,0 +1,11 @@
+﻿@{
+    ViewData["Title"] = "Kết quả thanh toán";
+}
+<div class="container mt-5 text-center">
+    <h2>@ViewBag.Message</h2>
+    @if (ViewBag.OrderInfo != null)
+    {
+        <p>@ViewBag.OrderInfo</p>
+    }
+    <a href="/Premium/Index" class="btn btn-primary mt-3">Quay lại</a>
+</div>
