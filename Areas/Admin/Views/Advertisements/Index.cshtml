@@ -1,0 +1,67 @@
+﻿@model IEnumerable<Shopify.Models.Advertisement>
+
+@{
+    ViewData["Title"] = "Quản lý Quảng cáo";
+}
+
+<h2>Quản lý Quảng cáo</h2>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Tạo Quảng cáo mới
+    </a>
+</p>
+
+<table class="table table-striped table-hover">
+    <thead class="table-dark">
+        <tr>
+            <th>Hình ảnh</th>
+            <th>Tiêu đề</th>
+            <th>Liên kết</th>
+            <th>Trạng thái</th>
+            <th>Ngày tạo</th>
+            <th>Thao tác</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var ad in Model)
+        {
+            <tr>
+                <td>
+                    @if (!string.IsNullOrEmpty(ad.ImageUrl))
+                    {
+                        <img src="@ad.ImageUrl" style="width:100px; border-radius:6px;" />
+                    }
+                </td>
+                <td>@ad.Title</td>
+                <td>@ad.Link</td>
+                <td>
+                    @if (ad.IsActive)
+                    {
+                        <span class="badge bg-success">Hiển thị</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary">Ẩn</span>
+                    }
+                </td>
+                <td>@ad.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                <td>
+                    <div class="btn-group">
+                        <a asp-action="Edit" asp-route-id="@ad.AdvertisementId" class="btn btn-sm btn-info"><i class="fas fa-edit"></i></a>
+                        <a asp-action="Details" asp-route-id="@ad.AdvertisementId" class="btn btn-sm btn-secondary"><i class="fas fa-eye"></i></a>
+                        <a asp-action="Delete" asp-route-id="@ad.AdvertisementId" class="btn btn-sm btn-danger"><i class="fas fa-trash-alt"></i></a>
+                    </div>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

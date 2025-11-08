@@ -106,7 +106,8 @@ namespace Shopify.Controllers
         // -----------------------------
         // Nhận phản hồi từ VNPay
         // -----------------------------
-        [HttpGet("/api/payment/vnpay-return")]
+        [AllowAnonymous]
+        [HttpGet("/payment/vnpay-return")]
         public IActionResult VNPayReturn()
         {
             var query = HttpContext.Request.Query;

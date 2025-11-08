@@ -1,11 +1,25 @@
 ﻿@{
     ViewData["Title"] = "Kết quả thanh toán";
+
+    // Fix: Sử dụng explicit null check
+    var message = ViewBag.Message as string;
+    var orderInfo = ViewBag.OrderInfo as string;
+    bool isSuccess = !string.IsNullOrEmpty(message) && message.Contains("thành công");
 }
+
 <div class="container mt-5 text-center">
-    <h2>@ViewBag.Message</h2>
-    @if (ViewBag.OrderInfo != null)
-    {
-        <p>@ViewBag.OrderInfo</p>
-    }
-    <a href="/Premium/Index" class="btn btn-primary mt-3">Quay lại</a>
+    <div class="card shadow-sm p-4">
+        <h2 class="mb-3 @(isSuccess ? "text-success" : "text-danger")">
+            @message
+        </h2>
+
+        @if (!string.IsNullOrEmpty(orderInfo))
+        {
+            <p class="text-muted">@orderInfo</p>
+        }
+
+        <a href="/Premium/Index" class="btn btn-primary mt-3">
+            Quay lại danh sách gói Premium
+        </a>
+    </div>
 </div>
