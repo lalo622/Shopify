@@ -1,0 +1,58 @@
+﻿@model Shopify.Models.Advertisement
+
+@{
+    ViewData["Title"] = "Thêm Quảng cáo";
+}
+
+<h2>Thêm Quảng cáo</h2>
+
+<!-- Thêm hiển thị thông báo thành công/lỗi -->
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+
+<form asp-action="Create" enctype="multipart/form-data">
+    @Html.AntiForgeryToken()
+
+    <!-- Hiển thị lỗi tổng quát -->
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+    <div class="mb-3">
+        <label asp-for="Title" class="form-label fw-bold">Tiêu đề *</label>
+        <input asp-for="Title" class="form-control" />
+        <span asp-validation-for="Title" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Description" class="form-label fw-bold">Mô tả</label>
+        <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+        <span asp-validation-for="Description" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Link" class="form-label fw-bold">Liên kết</label>
+        <input asp-for="Link" class="form-control" />
+        <span asp-validation-for="Link" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label fw-bold">Hình ảnh quảng cáo</label>
+        <input type="file" name="imageFile" class="form-control" accept="image/*" />
+        <small class="form-text text-muted">Chọn hình ảnh cho quảng cáo</small>
+    </div>
+
+    <div class="form-check mb-3">
+        <input class="form-check-input" type="checkbox" asp-for="IsActive" />
+        <label class="form-check-label" asp-for="IsActive">Kích hoạt</label>
+    </div>
+
+    <button type="submit" class="btn btn-success">Lưu</button>
+    <a asp-action="Index" class="btn btn-secondary">Hủy</a>
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

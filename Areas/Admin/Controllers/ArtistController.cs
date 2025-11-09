@@ -160,5 +160,6 @@ namespace Shopify.Areas.Admin.Controllers
 
             return Json(new { success = true, isActive = artist.IsActive });
         }
+
     }
 }

@@ -1,0 +1,68 @@
+﻿@model Shopify.Models.Premium
+
+@{
+    ViewData["Title"] = "Xóa Gói Premium";
+}
+
+<div class="container-fluid px-4">
+    <h2 class="mt-4 mb-4 text-danger">
+        <i class="fas fa-exclamation-triangle"></i> Xóa gói Premium
+    </h2>
+
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card shadow border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-trash-alt"></i> Xác nhận xóa
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <h5 class="alert-heading">
+                            <i class="fas fa-exclamation-circle"></i> Cảnh báo!
+                        </h5>
+                        Bạn có chắc chắn muốn xóa gói Premium này? Hành động này không thể hoàn tác.
+                    </div>
+
+                    <dl class="row">
+                        <dt class="col-sm-4">Tên gói:</dt>
+                        <dd class="col-sm-8">@Html.DisplayFor(model => model.Name)</dd>
+
+                        <dt class="col-sm-4">Giá:</dt>
+                        <dd class="col-sm-8">@string.Format("{0:N0}", Model.Price) VNĐ</dd>
+
+                        <dt class="col-sm-4">Thời hạn:</dt>
+                        <dd class="col-sm-8">@Html.DisplayFor(model => model.DurationDays) ngày</dd>
+
+                        <dt class="col-sm-4">Trạng thái:</dt>
+                        <dd class="col-sm-8">
+                            @if (Model.IsActive)
+                            {
+                                <span class="badge bg-success">Đang hoạt động</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">Đã khóa</span>
+                            }
+                        </dd>
+                    </dl>
+
+                    <form asp-action="Delete" method="post" id="deleteForm">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="PremiumId" />
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash-alt"></i> Xác nhận xóa
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Hủy bỏ
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

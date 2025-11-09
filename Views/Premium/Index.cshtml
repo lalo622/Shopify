@@ -1,0 +1,23 @@
+﻿@model IEnumerable<Shopify.Models.Premium>
+
+@{
+    ViewData["Title"] = "Chọn Gói Premium";
+}
+
+<h2 class="text-center mb-4">Chọn gói Premium của bạn</h2>
+
+<div class="row justify-content-center">
+    @foreach (var item in Model)
+    {
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm text-center p-3">
+                <h4>@item.Name</h4>
+                <p>@item.Description</p>
+                <h5 class="text-success">@item.Price.ToString("N0") ₫</h5>
+                <a href="@Url.Action("Pay", "Premium", new { id = item.PremiumId })" class="btn btn-primary">
+                    Mua ngay
+                </a>
+            </div>
+        </div>
+    }
+</div>
