@@ -1,0 +1,161 @@
+﻿@model IEnumerable<Shopify.Models.Advertisement>
+
+@{
+    ViewData["Title"] = "Quản lý Quảng cáo";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<h2 class="text-primary mb-4">Quản lý Quảng cáo</h2>
+
+@* ✅ Hiển thị thông báo *@
+@if (TempData["success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle me-2"></i>@TempData["success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+        <h6 class="m-0 font-weight-bold text-primary">Danh sách Quảng cáo</h6>
+        <a asp-action="Create" class="btn btn-primary btn-sm">
+            <i class="fas fa-plus me-1"></i> Thêm Quảng cáo mới
+        </a>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered" id="advertisementTable" width="100%" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>@Html.DisplayNameFor(model => model.Title)</th>
+                        <th>@Html.DisplayNameFor(model => model.ImageUrl)</th>
+                        <th>@Html.DisplayNameFor(model => model.Link)</th>
+                        <th>@Html.DisplayNameFor(model => model.CreatedAt)</th>
+                        <th>@Html.DisplayNameFor(model => model.IsActive)</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>@Html.DisplayFor(modelItem => item.AdvertisementId)</td>
+                            <td>@Html.DisplayFor(modelItem => item.Title)</td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(item.ImageUrl))
+                                {
+                                    <img src="@Url.Content(item.ImageUrl)" alt="Ảnh quảng cáo" style="width: 80px; height: auto; border-radius: 5px;" />
+                                }
+                                else
+                                {
+                                    <span>Không có ảnh</span>
+                                }
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(item.Link))
+                                {
+                                    <a href="@item.Link" target="_blank">@item.Link</a>
+                                }
+                            </td>
+                            <td>@Html.DisplayFor(modelItem => item.CreatedAt)</td>
+                            <td>
+                                <button class="btn @(item.IsActive ? "btn-success" : "btn-warning") btn-sm toggle-active-btn"
+                                        data-id="@item.AdvertisementId" data-isactive="@item.IsActive.ToString().ToLower()">
+                                    @(item.IsActive ? "Hiển thị" : "Ẩn")
+                                </button>
+                            </td>
+                            <td>
+                                <a asp-action="Edit" asp-route-id="@item.AdvertisementId" class="btn btn-info btn-sm me-2">
+                                    <i class="fas fa-edit"></i> Sửa
+                                </a>
+                                <button type="button" class="btn btn-danger btn-sm delete-btn" data-id="@item.AdvertisementId">
+                                    <i class="fas fa-trash-alt"></i> Xóa
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.3/js/dataTables.bootstrap5.min.js"></script>
+    <link href="https://cdn.datatables.net/1.11.3/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        $(document).ready(function () {
+            // Khởi tạo DataTables
+            $('#advertisementTable').DataTable({
+                "language": {
+                    "url": "//cdn.datatables.net/plug-ins/1.11.3/i18n/vi.json"
+                },
+                "order": [[0, "desc"]] // Sắp xếp theo ID giảm dần
+            });
+
+            // Ẩn thông báo sau 5 giây
+            setTimeout(() => $('.alert').fadeOut('slow'), 5000);
+
+            // Xử lý nút Toggle Active
+            $('.toggle-active-btn').on('click', function () {
+                var id = $(this).data('id');
+                var button = $(this);
+
+                $.post('/Admin/Advertisement/ToggleActive', { id: id })
+                    .done(function (response) {
+                        if (response.success) {
+                            if (response.isActive) {
+                                button.removeClass('btn-warning').addClass('btn-success').text('Hiển thị');
+                                button.data('isactive', 'true');
+                                Swal.fire('Thành công!', 'Đã hiển thị quảng cáo.', 'success');
+                            } else {
+                                button.removeClass('btn-success').addClass('btn-warning').text('Ẩn');
+                                button.data('isactive', 'false');
+                                Swal.fire('Thành công!', 'Đã ẩn quảng cáo.', 'success');
+                            }
+                        }
+                    })
+                    .fail(function () {
+                        Swal.fire('Lỗi!', 'Không thể thay đổi trạng thái.', 'error');
+                    });
+            });
+
+            // Xử lý nút Delete
+            $('.delete-btn').on('click', function () {
+                var id = $(this).data('id');
+                var row = $(this).closest('tr');
+
+                Swal.fire({
+                    title: 'Xác nhận xóa?',
+                    text: "Bạn không thể hoàn tác thao tác này!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Đúng, xóa nó!',
+                    cancelButtonText: 'Hủy'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.post(`/Admin/Advertisement/DeleteConfirmed/${id}`)
+                            .done(function (response) {
+                                if (response.success) {
+                                    row.remove();
+                                    Swal.fire('Đã xóa!', 'Quảng cáo đã được xóa.', 'success');
+                                } else {
+                                    Swal.fire('Lỗi!', response.message || 'Không thể xóa quảng cáo.', 'error');
+                                }
+                            })
+                            .fail(function () {
+                                Swal.fire('Lỗi!', 'Đã xảy ra lỗi khi xóa quảng cáo.', 'error');
+                            });
+                    }
+                });
+            });
+        });
+    </script>
+}
