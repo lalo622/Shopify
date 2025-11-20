@@ -1,0 +1,33 @@
+﻿@model IEnumerable<Shopify.Models.Playlist>
+
+<h2>Playlist của bạn</h2>
+
+<a href="/Playlist/Create" class="btn btn-primary mb-3">+ Tạo Playlist</a>
+
+<ul class="list-group">
+    @foreach (var p in Model)
+    {
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+                <strong>@p.Name</strong>
+            </div>
+
+            <div class="d-flex gap-3">
+
+                
+                <a href="/Playlist/Details/@p.PlaylistId" class="btn btn-sm btn-outline-primary">
+                    Xem
+                </a>
+
+              
+                <form asp-action="DeleteConfirmed" asp-controller="Playlist" method="post" onsubmit="return confirm('Bạn chắc chắn muốn xóa playlist này?')">
+                    <input type="hidden" name="id" value="@p.PlaylistId" />
+                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                        Xóa
+                    </button>
+                </form>
+
+            </div>
+        </li>
+    }
+</ul>

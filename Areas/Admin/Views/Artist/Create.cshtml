@@ -1,0 +1,210 @@
+﻿@model Shopify.Models.Artist
+
+@{
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+    ViewData["Title"] = "Thêm ca sĩ mới";
+}
+
+<style>
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #ffe6f0, #f9f7ff);
+        min-height: 100vh;
+    }
+
+    h2 {
+        text-align: center;
+        margin-bottom: 25px;
+        color: #5a2a5d;
+        font-size: 22px;
+        font-weight: 600;
+    }
+
+    form {
+        max-width: 650px;
+        margin: 40px auto;
+        background: #ffffff;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+        border-top: 5px solid #d63384;
+        transition: 0.3s;
+    }
+
+    form:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+    }
+
+    label {
+        font-weight: 600;
+        display: block;
+        margin-bottom: 6px;
+        color: #6a097d;
+        font-size: 15px;
+    }
+
+    input[type="text"],
+    input[type="date"],
+    input[type="file"],
+    textarea,
+    select {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: all 0.3s ease;
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+        border-color: #d63384;
+        box-shadow: 0 0 6px rgba(214, 51, 132, 0.3);
+        outline: none;
+    }
+
+    .btn-primary {
+        background: linear-gradient(90deg, #d63384, #9b4dca);
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        color: white;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        background: linear-gradient(90deg, #c21868, #8134af);
+        transform: scale(1.05);
+    }
+
+    .btn-secondary {
+        background-color: #bbb;
+        border: none;
+        border-radius: 8px;
+        transition: 0.3s;
+        color: white;
+    }
+
+    .btn-secondary:hover {
+        background-color: #999;
+    }
+
+    #imagePreview img {
+        border: 2px solid #f3cce3;
+        transition: 0.3s;
+    }
+
+    #imagePreview img:hover {
+        transform: scale(1.03);
+        box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+    }
+</style>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-plus me-2"></i>Thêm ca sĩ mới
+                    </h4>
+                </div>
+
+                <div class="card-body">
+                    @* ✅ Hiển thị thông báo *@
+                    @if (ViewBag.Error != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-triangle me-2"></i>@ViewBag.Error
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    @if (TempData["success"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="fas fa-check-circle me-2"></i>@TempData["success"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    @* ✅ Form thêm ca sĩ *@
+                    @using (Html.BeginForm("Create", "Artist", FormMethod.Post, new { enctype = "multipart/form-data", area = "Admin" }))
+                    {
+                        @Html.AntiForgeryToken()
+
+                        <div class="mb-3">
+                            @Html.LabelFor(m => m.Name, "Tên ca sĩ *", new { @class = "form-label" })
+                            @Html.TextBoxFor(m => m.Name, new { @class = "form-control", placeholder = "Nhập tên ca sĩ" })
+                            @Html.ValidationMessageFor(m => m.Name, "", new { @class = "text-danger" })
+                        </div>
+
+                        <div class="mb-3">
+                            @Html.LabelFor(m => m.QuocGia, "Quốc gia", new { @class = "form-label" })
+                            @Html.TextBoxFor(m => m.QuocGia, new { @class = "form-control", placeholder = "Nhập quốc gia" })
+                        </div>
+
+                        <div class="mb-3">
+                            @Html.LabelFor(m => m.NgaySinh, "Ngày sinh", new { @class = "form-label" })
+                            @Html.TextBoxFor(m => m.NgaySinh, "{0:yyyy-MM-dd}", new { @type = "date", @class = "form-control" })
+                        </div>
+
+                        <div class="mb-3">
+                            @Html.LabelFor(m => m.MoTa, "Tiểu sử / Mô tả", new { @class = "form-label" })
+                            @Html.TextAreaFor(m => m.MoTa, 4, 50, new { @class = "form-control", placeholder = "Nhập tiểu sử hoặc mô tả..." })
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Ảnh ca sĩ</label>
+                            <input type="file" name="imageFile" class="form-control" accept="image/*" onchange="previewImage(event)" />
+                            <small class="form-text text-muted">Hỗ trợ JPG, PNG hoặc GIF</small>
+                            <div id="imagePreview" class="mt-3 text-center"></div>
+                        </div>
+
+                        <div class="mb-3">
+                            @Html.LabelFor(m => m.IsActive, "Trạng thái", new { @class = "form-label" })
+                            @Html.DropDownListFor(m => m.IsActive, new List<SelectListItem> {
+                                new SelectListItem { Text = "Hiển thị", Value = "true" },
+                                new SelectListItem { Text = "Ẩn", Value = "false" }
+                            }, new { @class = "form-select" })
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Quay lại danh sách
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Lưu ca sĩ
+                            </button>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // Xem trước ảnh
+        function previewImage(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    document.getElementById('imagePreview').innerHTML =
+                        `<img src="${e.target.result}" alt="Preview" 
+                              style="max-width:200px;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,0.2);" />`;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Ẩn thông báo sau 5 giây
+        setTimeout(() => $('.alert').fadeOut('slow'), 5000);
+    </script>
+}

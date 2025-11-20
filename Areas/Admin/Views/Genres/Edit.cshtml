@@ -1,0 +1,81 @@
+@using Shopify.Models
+@model Genre
+
+@{
+    ViewData["Title"] = "Sửa thể loại";
+}
+
+<div class="container-fluid px-4">
+    <h2 class="mt-4 mb-4">
+        <i class="fas fa-edit"></i> Sửa thể loại: <strong>@Model.Name</strong>
+    </h2>
+
+    <!-- HIỂN THỊ LỖI -->
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <h5><i class="fas fa-exclamation-triangle"></i> Có lỗi xảy ra:</h5>
+            <ul class="mb-0">
+                @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                {
+                    <li>@error.ErrorMessage</li>
+                }
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card shadow">
+                <div class="card-body">
+                    <form asp-action="Edit" method="post" id="editGenreForm">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="GenreId" />
+
+                        <!-- Tên thể loại -->
+                        <div class="mb-3">
+                            <label asp-for="Name" class="form-label fw-bold">
+                                <i class="fas fa-guitar"></i> Tên thể loại <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="Name" name="Name" class="form-control" 
+                                   placeholder="VD: Pop, Rock, Jazz, Classical..." required />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+
+                        <!-- Mô tả -->
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label fw-bold">
+                                <i class="fas fa-align-left"></i> Mô tả
+                            </label>
+                            <textarea asp-for="Description" name="Description" class="form-control" rows="4"
+                                      placeholder="Nhập mô tả về thể loại nhạc này (không bắt buộc)"></textarea>
+                            <small class="form-text text-muted">
+                                Mô tả chi tiết giúp người dùng hiểu rõ hơn về thể loại này
+                            </small>
+                        </div>
+
+                        <hr class="my-4" />
+
+                        <!-- Buttons -->
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save"></i> Cập nhật
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Hủy
+                            </a>
+                            <a asp-action="Details" asp-route-id="@Model.GenreId" class="btn btn-info">
+                                <i class="fas fa-eye"></i> Xem chi tiết
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+}

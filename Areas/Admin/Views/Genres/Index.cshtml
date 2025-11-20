@@ -1,0 +1,211 @@
+@using Shopify.Models
+@model IEnumerable<Genre>
+
+@{
+    ViewData["Title"] = "Danh sách thể loại";
+}
+
+<div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center mt-4 mb-4">
+        <h2><i class="fas fa-guitar"></i> Danh sách thể loại</h2>
+        <a href="/Admin/Genres/Create"class="btn btn-primary">
+            <i class="fas fa-plus"></i> Thêm thể loại
+        </a>
+    </div>
+
+    <!-- HIỂN THỊ THÔNG BÁO -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle"></i> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="card shadow">
+        <div class="card-body">
+            @if (Model != null && Model.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped">
+                        <thead class="table-dark">
+                            <tr>
+                                <th width="5%">#</th>
+                                <th width="25%">Tên thể loại</th>
+                                <th width="40%">Mô tả</th>
+                                <th width="15%" class="text-center">Số bài hát</th>
+                                <th width="15%" class="text-center">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                int index = 1;
+                            }
+                            @foreach (var genre in Model)
+                            {
+                                <tr>
+                                    <td>@index</td>
+                                    <td>
+                                        <strong>@genre.Name</strong>
+                                    </td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(genre.Description))
+                                        {
+                                            @(genre.Description.Length > 100 
+                                                ? genre.Description.Substring(0, 100) + "..." 
+                                                : genre.Description)
+                                        }
+                                        else
+                                        {
+                                            <em class="text-muted">Chưa có mô tả</em>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        @if (genre.Songs != null && genre.Songs.Any())
+                                        {
+                                            <span class="badge bg-info">
+                                                <i class="fas fa-music"></i> @genre.Songs.Count
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">0</span>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group" role="group">
+                                            <a asp-area="Admin" asp-action="Details" asp-route-id="@genre.GenreId" 
+                                               class="btn btn-sm btn-info" title="Chi tiết">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a asp-area="Admin" asp-action="Edit" asp-route-id="@genre.GenreId" 
+                                               class="btn btn-sm btn-warning" title="Sửa">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-danger" 
+                                                    title="Xóa"
+                                                    onclick="showDeleteModal(@genre.GenreId, '@Html.Raw(genre.Name)', @((genre.Songs?.Count ?? 0)))">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                index++;
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info text-center" role="alert">
+                    <i class="fas fa-info-circle fa-2x mb-3"></i>
+                    <h5>Chưa có thể loại nào</h5>
+                    <p class="mb-3">Hãy thêm thể loại đầu tiên để bắt đầu quản lý nhạc của bạn!</p>
+                    <a asp-action="Create" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Thêm thể loại ngay
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Modal Xác nhận xóa -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteModalLabel">
+                    <i class="fas fa-exclamation-triangle"></i> Xác nhận xóa
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="deleteWarningMessage" class="alert alert-warning d-none">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>Không thể xóa!</strong>
+                    <p class="mb-0" id="warningText"></p>
+                </div>
+                
+                <div id="deleteConfirmMessage">
+                    <p class="mb-3">Bạn có chắc chắn muốn xóa thể loại:</p>
+                    <h5 class="text-primary text-center mb-3">
+                        <i class="fas fa-guitar"></i> <span id="genreName"></span>
+                    </h5>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Lưu ý:</strong> Hành động này không thể hoàn tác!
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> Hủy
+                </button>
+                <form id="deleteForm" method="post" style="display: inline;">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-danger" id="confirmDeleteBtn">
+                        <i class="fas fa-trash"></i> Xác nhận xóa
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let deleteModal;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Khởi tạo modal
+            deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+            
+            // Auto dismiss alerts sau 5 giây
+            setTimeout(function() {
+                $('.alert').fadeOut('slow');
+            }, 5000);
+        });
+
+        function showDeleteModal(genreId, genreName, songCount) {
+            // Reset modal
+            document.getElementById('deleteWarningMessage').classList.add('d-none');
+            document.getElementById('deleteConfirmMessage').classList.remove('d-none');
+            document.getElementById('confirmDeleteBtn').disabled = false;
+            
+            // Set tên thể loại
+            document.getElementById('genreName').textContent = genreName;
+            
+            // Set action cho form
+            const form = document.getElementById('deleteForm');
+            form.action = '/Admin/Genres/Delete/' + genreId;
+            
+            // Kiểm tra nếu có bài hát
+            if (songCount > 0) {
+                document.getElementById('deleteWarningMessage').classList.remove('d-none');
+                document.getElementById('deleteConfirmMessage').classList.add('d-none');
+                document.getElementById('warningText').innerHTML = 
+                    'Thể loại này có <strong>' + songCount + ' bài hát</strong> đang sử dụng. ' +
+                    'Vui lòng xóa hoặc chuyển các bài hát sang thể loại khác trước khi xóa.';
+                document.getElementById('confirmDeleteBtn').disabled = true;
+                document.getElementById('confirmDeleteBtn').innerHTML = 
+                    '<i class="fas fa-ban"></i> Không thể xóa';
+            } else {
+                document.getElementById('confirmDeleteBtn').innerHTML = 
+                    '<i class="fas fa-trash"></i> Xác nhận xóa';
+            }
+            
+            // Hiển thị modal
+            deleteModal.show();
+        }
+    </script>
+}

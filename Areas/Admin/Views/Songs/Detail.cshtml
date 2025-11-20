@@ -1,0 +1,159 @@
+@using Shopify.Models
+@model Song
+
+@{
+    ViewData["Title"] = "Chi tiết bài hát";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card shadow">
+                <div class="card-header bg-info text-white">
+                    <h3 class="mb-0">
+                        <i class="bi bi-music-note-beamed"></i> Chi tiết bài hát
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <!-- Tiêu đề -->
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>Tiêu đề:</strong>
+                        </div>
+                        <div class="col-md-8">
+                            <h5 class="text-primary">@Model.Title</h5>
+                        </div>
+                    </div>
+
+                    <hr />
+
+                    <!-- Nghệ sĩ -->
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>Nghệ sĩ:</strong>
+                        </div>
+                        <div class="col-md-8">
+                            @(Model.Artist?.Name ?? "N/A")
+                        </div>
+                    </div>
+
+                    <!-- Thể loại -->
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>Thể loại:</strong>
+                        </div>
+                        <div class="col-md-8">
+                            <span class="badge bg-secondary">@(Model.Genre?.Name ?? "N/A")</span>
+                        </div>
+                    </div>
+
+                    <!-- Album -->
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>Album:</strong>
+                        </div>
+                        <div class="col-md-8">
+                            @if (Model.Album != null)
+                            {
+                                <span>@Model.Album.Title</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">Không thuộc album nào</span>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Thời lượng -->
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>Thời lượng:</strong>
+                        </div>
+                        <div class="col-md-8">
+                            @(string.IsNullOrEmpty(Model.Duration) ? "N/A" : Model.Duration)
+                        </div>
+                    </div>
+
+                    <!-- Mô tả -->
+                    @if (!string.IsNullOrEmpty(Model.Description))
+                    {
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <strong>Mô tả:</strong>
+                            </div>
+                            <div class="col-md-8">
+                                <p class="text-muted">@Model.Description</p>
+                            </div>
+                        </div>
+                    }
+
+                    <hr />
+
+                    <!-- Trình phát nhạc -->
+                    @if (!string.IsNullOrEmpty(Model.AudioUrl))
+                    {
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <strong>Nghe thử:</strong>
+                            </div>
+                            <div class="col-md-8">
+                                <div class="border rounded p-3 bg-light">
+                                    <audio controls class="w-100">
+                                        <source src="@Model.AudioUrl" type="audio/mpeg">
+                                        Trình duyệt không hỗ trợ phát nhạc.
+                                    </audio>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle"></i> Chưa có file nhạc
+                        </div>
+                    }
+                </div>
+
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between">
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Quay lại
+                        </a>
+                        <div>
+                            <a asp-action="Edit" asp-route-id="@Model.SongId" class="btn btn-warning">
+                                <i class="bi bi-pencil"></i> Chỉnh sửa
+                            </a>
+                            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                                <i class="bi bi-trash"></i> Xóa
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal xác nhận xóa -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteModalLabel">Xác nhận xóa</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Bạn có chắc chắn muốn xóa bài hát "<strong>@Model.Title</strong>" không?
+                <br><small class="text-danger">Hành động này không thể hoàn tác!</small>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <form asp-action="Delete" method="post" class="d-inline">
+                    <input type="hidden" name="id" value="@Model.SongId" />
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-danger">Xóa</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,516 @@
+@model Shopify.Models.Song
+@using Microsoft.AspNetCore.Identity
+@inject IHttpContextAccessor HttpContextAccessor
+
+@{
+    ViewData["Title"] = Model.Title;
+    var user = HttpContextAccessor.HttpContext.User;
+    bool isVipUser = user.Identity.IsAuthenticated 
+                     && user.Claims.Any(c => c.Type == "UserId") 
+                     && bool.TryParse(user.FindFirst("IsVip")?.Value, out var vip) && vip;
+}
+
+<style>
+    .song-detail-container {
+        display: grid;
+        grid-template-columns: 1fr 400px;
+        gap: 40px;
+        padding: 20px;
+        max-width: 1600px;
+        margin: 0 auto;
+    }
+
+    /* Left Column - Main Content */
+    .main-content {
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Hero Card */
+    .song-hero-card {
+        background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+        border-radius: 12px;
+        padding: 40px;
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 32px;
+        align-items: center;
+        margin-bottom: 40px;
+        box-shadow: 0 8px 32px rgba(59, 130, 246, 0.3);
+    }
+
+    .song-cover-large {
+        width: 200px;
+        height: 200px;
+        border-radius: 12px;
+        object-fit: cover;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    }
+
+    .song-hero-info h1 {
+        font-size: 3rem;
+        font-weight: 900;
+        margin: 0 0 12px 0;
+        color: #fff;
+    }
+
+    .song-hero-meta {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+
+    .artist-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid #fff;
+    }
+
+    .artist-link {
+        color: #fff;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+
+    .artist-link:hover {
+        text-decoration: underline;
+    }
+
+    .song-stats {
+        display: flex;
+        gap: 20px;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.9rem;
+    }
+
+    .stat-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    /* Suggestions Section */
+    .suggestions-section {
+        margin-top: 20px;
+    }
+
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #fff;
+    }
+
+    .view-all-link {
+        color: #b3b3b3;
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+
+    .view-all-link:hover {
+        color: #fff;
+    }
+
+    .suggestions-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .suggestion-item {
+        display: grid;
+        grid-template-columns: 50px 1fr;
+        gap: 12px;
+        padding: 8px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .suggestion-item:hover {
+        background: #282828;
+    }
+
+    .suggestion-cover {
+        width: 50px;
+        height: 50px;
+        border-radius: 4px;
+        object-fit: cover;
+        background: #333;
+    }
+
+    .suggestion-info {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        min-width: 0;
+    }
+
+    .suggestion-title {
+        font-size: 0.95rem;
+        font-weight: 500;
+        color: #fff;
+        margin: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .suggestion-artist {
+        font-size: 0.85rem;
+        color: #b3b3b3;
+        margin: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Albums Section */
+    .albums-section {
+        margin-top: 40px;
+    }
+
+    .albums-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .albums-nav {
+        display: flex;
+        gap: 8px;
+    }
+
+    .nav-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: #282828;
+        border: none;
+        color: #fff;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+    }
+
+    .nav-btn:hover {
+        background: #3e3e3e;
+        transform: scale(1.05);
+    }
+
+    .albums-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 16px;
+    }
+
+    .album-card {
+        background: #181818;
+        border-radius: 8px;
+        padding: 12px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .album-card:hover {
+        background: #282828;
+        transform: translateY(-4px);
+    }
+
+    .album-cover {
+        width: 100%;
+        aspect-ratio: 1;
+        border-radius: 6px;
+        object-fit: cover;
+        background: #282828;
+        margin-bottom: 12px;
+    }
+
+    .album-title {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #fff;
+        margin: 0 0 4px 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .album-artist {
+        font-size: 0.8rem;
+        color: #b3b3b3;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Right Sidebar */
+    .right-sidebar {
+        background: #181818;
+        border-radius: 12px;
+        padding: 24px;
+        height: fit-content;
+        position: sticky;
+        top: 20px;
+    }
+
+    .sidebar-title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 20px;
+    }
+
+    .artist-info-card {
+        text-align: center;
+        margin-bottom: 24px;
+    }
+
+    .artist-image-large {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin: 0 auto 16px;
+        border: 3px solid #282828;
+    }
+
+    .artist-name {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 8px;
+    }
+
+    .artist-followers {
+        color: #b3b3b3;
+        font-size: 0.9rem;
+    }
+
+    .follow-btn {
+        width: 100%;
+        background: transparent;
+        border: 1px solid #fff;
+        color: #fff;
+        padding: 10px;
+        border-radius: 500px;
+        font-weight: 600;
+        cursor: pointer;
+        margin-top: 16px;
+        transition: all 0.2s ease;
+    }
+
+    .follow-btn:hover {
+        transform: scale(1.04);
+        border-width: 2px;
+    }
+
+    .lyrics-section {
+        margin-top: 24px;
+    }
+
+    .lyrics-text {
+        color: #b3b3b3;
+        line-height: 1.8;
+        font-size: 0.95rem;
+        white-space: pre-line;
+    }
+
+    @@media (max-width: 1024px) {
+        .song-detail-container {
+            grid-template-columns: 1fr;
+        }
+
+        .right-sidebar {
+            position: relative;
+            top: 0;
+        }
+
+        .song-hero-card {
+            grid-template-columns: 1fr;
+            text-align: center;
+            padding: 24px;
+        }
+
+        .song-cover-large {
+            margin: 0 auto;
+        }
+
+        .song-hero-info h1 {
+            font-size: 2rem;
+        }
+    }
+</style>
+
+<div class="song-detail-container">
+    <!-- Left Column -->
+    <div class="main-content">
+        <!-- Hero Card -->
+        <div class="song-hero-card">
+            <img src="@(Model.ImageUrl ?? Model.Album?.CoverImageUrl ?? "/images/default-song.png")" 
+                 alt="@Model.Title"
+                 class="song-cover-large"
+                 onerror="this.src='/images/default-song.png'">
+            
+            <div class="song-hero-info">
+                <h1>@Model.Title</h1>
+                
+                <div class="song-hero-meta">
+                    <img src="@(Model.Artist?.ImageUrl ?? "/images/default-artist.png")" 
+                         alt="@Model.Artist?.Name"
+                         class="artist-avatar"
+                         onerror="this.src='/images/default-artist.png'">
+                    <a href="@Url.Action("Detail", "Artists", new { id = Model.ArtistId })" 
+                       class="artist-link">
+                        @Model.Artist?.Name
+                    </a>
+                </div>
+
+                <div class="song-stats">
+                    </div>
+                    <div class="stat-item">
+                        <i class="bi bi-bar-chart-fill"></i>
+                        <span>@Model.PlayCount.ToString("N0") lượt nghe</span>
+                    </div>
+                    <div class="stat-item">
+                        <i class="bi bi-clock"></i>
+                        <span>@Model.Duration</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Suggestions -->
+        <div class="suggestions-section">
+            <div class="section-header">
+                <h2 class="section-title">Đề xuất</h2>
+                <a href="#" class="view-all-link">Xem thêm</a>
+            </div>
+
+            <div class="suggestions-list">
+                @* Giả lập 5 bài hát gợi ý - Trong thực tế sẽ lấy từ Controller *@
+                @for (int i = 1; i <= 5; i++)
+                {
+                    <div class="suggestion-item">
+                        <img src="/images/default-song.png" 
+                             alt="Suggestion"
+                             class="suggestion-cover">
+                        <div class="suggestion-info">
+                            <p class="suggestion-title">Tên bài hát @i</p>
+                            <p class="suggestion-artist">Tên nghệ sĩ</p>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Albums -->
+        <div class="albums-section">
+            <div class="albums-header">
+                <h2 class="section-title">Album</h2>
+                <div class="albums-nav">
+                    <button class="nav-btn">
+                        <i class="bi bi-chevron-left"></i>
+                    </button>
+                    <button class="nav-btn">
+                        <i class="bi bi-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="albums-grid">
+                @if (Model.Album != null)
+                {
+                    <div class="album-card">
+                        <img src="@(Model.Album.CoverImageUrl ?? "/images/default-album.png")" 
+                             alt="@Model.Album.Title"
+                             class="album-cover"
+                             onerror="this.src='/images/default-album.png'">
+                        <h4 class="album-title">@Model.Album.Title</h4>
+                        <p class="album-artist">@Model.Artist?.Name</p>
+                    </div>
+                }
+                
+                @* Giả lập các album khác - Trong thực tế sẽ lấy từ Controller *@
+                @for (int i = 1; i <= 4; i++)
+                {
+                    <div class="album-card">
+                        <img src="/images/default-album.png" 
+                             alt="Album"
+                             class="album-cover">
+                        <h4 class="album-title">Album @i</h4>
+                        <p class="album-artist">@Model.Artist?.Name</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Sidebar -->
+    <div class="right-sidebar">
+        <h3 class="sidebar-title">Giới thiệu về nghệ sĩ</h3>
+        
+        <div class="artist-info-card">
+            <img src="@(Model.Artist?.ImageUrl ?? "/images/default-artist.png")" 
+                 alt="@Model.Artist?.Name"
+                 class="artist-image-large"
+                 onerror="this.src='/images/default-artist.png'">
+            
+            <h4 class="artist-name">@Model.Artist?.Name</h4>
+            <p class="artist-followers">
+                <i class="bi bi-people-fill"></i>
+                @(Model.Artist?.Songs?.Count ?? 0) bài hát
+            </p>
+            
+            <button class="follow-btn">
+                <i class="bi bi-plus-circle"></i> Theo dõi
+            </button>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.Description))
+        {
+            <div class="lyrics-section">
+                <h4 class="sidebar-title">Mô tả</h4>
+                <p class="lyrics-text">@Model.Description</p>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Xử lý click vào suggestion items
+            const suggestionItems = document.querySelectorAll('.suggestion-item');
+            suggestionItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    // Logic phát nhạc hoặc chuyển trang
+                    console.log('Play suggestion');
+                });
+            });
+
+            // Xử lý navigation buttons cho albums
+            const navBtns = document.querySelectorAll('.nav-btn');
+            navBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    // Logic scroll albums
+                    console.log('Navigate albums');
+                });
+            });
+        });
+    </script>
+}

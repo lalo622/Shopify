@@ -1,0 +1,176 @@
+@using Shopify.Models
+@model IEnumerable<Song>
+
+@{
+    ViewData["Title"] = "Danh sách bài hát";
+}
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Danh sách bài hát</h2>
+        <a class="btn btn-primary" href="/Admin/Songs/Create">
+            <i class="bi bi-plus-circle"></i> Thêm bài hát
+        </a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle"></i> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="card shadow">
+        <div class="card-body">
+            <table class="table table-bordered table-striped table-hover align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>STT</th>
+                        <th>Tiêu đề</th>
+                        <th>Nghệ sĩ</th>
+                        <th>Thể loại</th>
+                        <th>Album</th>
+                        <th>Thời lượng</th>
+                        <th><i class="bi bi-star"></i> VIP</th>
+                        <th style="width: 300px;">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Any())
+                    {
+                        int stt = 1;
+                        foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@stt</td>
+                                <td><strong>@item.Title</strong></td>
+                                <td>@(item.Artist?.Name ?? "N/A")</td>
+                                <td><span class="badge bg-secondary">@(item.Genre?.Name ?? "N/A")</span></td>
+                                <td>@(item.Album?.Title ?? "-")</td>
+                                <td>@(string.IsNullOrEmpty(item.Duration) ? "-" : item.Duration)</td>
+                                <td>
+                                    @if (item.IsVip)
+                                    {
+                                        <span class="badge bg-warning text-dark">
+                                            <i class="bi bi-star-fill"></i> VIP
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">
+                                            <i class="bi bi-star"></i> Thường
+                                        </span>
+                                    }
+                                </td>
+                                <td>
+                                    <a href="/Admin/Songs/Detail/@item.SongId" class="btn btn-info btn-sm">
+                                        <i class="bi bi-eye"></i> Chi tiết
+                                    </a>
+                                    <a href="/Admin/Songs/Edit/@item.SongId" class="btn btn-warning btn-sm">
+                                        <i class="bi bi-pencil"></i> Sửa
+                                    </a>
+
+                                    <button type="button"
+                                            class="btn btn-outline-warning btn-sm"
+                                            onclick="toggleVip(@item.SongId)">
+                                        <i class="bi @(item.IsVip ? "bi-star-fill" : "bi-star")"></i>
+                                        @(item.IsVip ? "Bỏ VIP" : "Đặt VIP")
+                                    </button>
+
+                                    <button type="button" 
+                                            class="btn btn-danger btn-sm" 
+                                            onclick="showDeleteModal(@item.SongId, '@item.Title')">
+                                        <i class="bi bi-trash"></i> Xóa
+                                    </button>
+                                </td>
+                            </tr>
+                            stt++;
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="9" class="text-center text-muted">
+                                <i class="bi bi-inbox"></i> Chưa có bài hát nào
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal xác nhận xóa -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-exclamation-triangle"></i> Xác nhận xóa
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                Bạn có chắc chắn muốn xóa bài hát "<strong id="songTitle"></strong>" không?
+                <br><small class="text-danger">⚠️ Hành động này không thể hoàn tác!</small>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle"></i> Hủy
+                </button>
+                <form id="deleteForm" method="post">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash"></i> Xác nhận xóa
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let deleteModalInstance = null;
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const deleteModalElement = document.getElementById('deleteModal');
+            if (deleteModalElement) {
+                deleteModalInstance = new bootstrap.Modal(deleteModalElement);
+            }
+        });
+
+        function showDeleteModal(songId, songTitle) {
+            document.getElementById('songTitle').textContent = songTitle;
+            document.getElementById('deleteForm').action = '/Admin/Songs/Delete/' + songId;
+            if (deleteModalInstance) {
+                deleteModalInstance.show();
+            }
+        }
+
+        //Hàm toggle VIP 
+        function toggleVip(songId) {
+            fetch(`/Admin/Songs/ToggleVip/${songId}`, {
+                method: 'POST'
+            })
+                .then(response => {
+                    if (response.ok) {
+                        location.reload(); // reload lại để cập nhật trạng thái
+                    } else {
+                        alert("Lỗi khi thay đổi trạng thái VIP");
+                    }
+                })
+                .catch(() => alert("Không thể kết nối đến máy chủ"));
+        }
+    </script>
+}

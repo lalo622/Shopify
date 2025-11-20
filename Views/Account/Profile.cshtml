@@ -1,0 +1,111 @@
+@model Shopify.Models.User
+@{
+    ViewData["Title"] = "Edit personal info";
+}
+
+<style>
+    body {
+        background-color: #121212;
+        color: white;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .profile-container {
+        max-width: 600px;
+        margin: 60px auto;
+    }
+
+    h2 {
+        font-weight: 700;
+        margin-bottom: 30px;
+    }
+
+    label {
+        font-size: 0.9rem;
+        color: #ccc;
+        margin-bottom: 5px;
+        display: block;
+    }
+
+    input {
+        width: 100%;
+        background: #1e1e1e;
+        color: white;
+        border: 1px solid #333;
+        border-radius: 6px;
+        padding: 10px;
+        margin-bottom: 15px;
+    }
+
+        input:focus {
+            outline: none;
+            border-color: #1DB954;
+        }
+
+    .btn-green {
+        background-color: #1DB954;
+        color: white;
+        font-weight: 600;
+        border: none;
+        border-radius: 25px;
+        padding: 10px 25px;
+        transition: 0.3s;
+    }
+
+        .btn-green:hover {
+            background-color: #17a74a;
+        }
+
+    .btn-cancel {
+        background-color: transparent;
+        border: none;
+        color: #aaa;
+        margin-right: 15px;
+    }
+
+    .alert-success {
+        background-color: #1db95433;
+        border: 1px solid #1db954;
+        color: #1db954;
+    }
+
+    a.change-link {
+        color: #1DB954;
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+        a.change-link:hover {
+            text-decoration: underline;
+        }
+</style>
+
+<div class="profile-container">
+    <h2>Edit personal info</h2>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+
+    <form asp-action="Profile" method="post">
+        <label>Username</label>
+        <input asp-for="Username" />
+
+        <label>Email</label>
+        <input asp-for="Email" readonly />
+
+        <label>Password</label>
+        <input type="password" value="********" readonly />
+        <a class="change-link" asp-action="ChangePassword">Change password</a>
+
+        <div class="mt-4 d-flex justify-content-between">
+            <button type="button" class="btn-cancel" onclick="window.location.href='/'">Cancel</button>
+            <button type="submit" class="btn-green">Save profile</button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

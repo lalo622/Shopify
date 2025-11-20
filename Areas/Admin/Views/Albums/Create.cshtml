@@ -1,0 +1,251 @@
+﻿@model Shopify.Models.Album
+
+@{
+    ViewData["Title"] = "Thêm Album Mới";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="mb-3">
+                <i class="fas fa-compact-disc me-2"></i>@ViewData["Title"]
+            </h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-action="Index">Albums</a></li>
+                    <li class="breadcrumb-item active">Thêm mới</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Thông tin Album</h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create" method="post" enctype="multipart/form-data" id="albumForm">
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="Title" class="form-label fw-bold">
+                                        <i class="fas fa-music me-1"></i>Tên Album
+                                    </label>
+                                    <input asp-for="Title" class="form-control" placeholder="Nhập tên album..." />
+                                    <span asp-validation-for="Title" class="text-danger small"></span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="ArtistId" class="form-label fw-bold">
+                                        <i class="fas fa-user-tie me-1"></i>Nghệ sĩ
+                                    </label>
+                                    <select asp-for="ArtistId" class="form-select" asp-items="ViewBag.ArtistId">
+                                        <option value="">-- Chọn nghệ sĩ --</option>
+                                    </select>
+                                    <span asp-validation-for="ArtistId" class="text-danger small"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="ReleaseDate" class="form-label fw-bold">
+                                        <i class="fas fa-calendar me-1"></i>Ngày phát hành
+                                    </label>
+                                    <input asp-for="ReleaseDate" type="date" class="form-control" />
+                                    <span asp-validation-for="ReleaseDate" class="text-danger small"></span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="ImageFile" class="form-label fw-bold">
+                                        <i class="fas fa-image me-1"></i>Ảnh bìa
+                                    </label>
+                                    <input type="file" name="ImageFile" id="ImageFile" class="form-control" accept="image/*" onchange="previewImage(this)" />
+                                    <small class="text-muted">Định dạng: JPG, PNG, GIF (Tối đa 5MB)</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <div id="imagePreview" class="mt-2" style="display: none;">
+                                    <img id="preview" src="" alt="Preview" class="img-thumbnail" style="max-width: 250px; max-height: 250px;" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="my-4" />
+
+                        <!-- Danh sách bài hát -->
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <label class="form-label fw-bold mb-0">
+                                    <i class="fas fa-list-ul me-1"></i>Danh sách bài hát
+                                </label>
+                                <button type="button" class="btn btn-success btn-sm" onclick="addSongSelect()">
+                                    <i class="fas fa-plus me-1"></i>Thêm bài hát
+                                </button>
+                            </div>
+
+                            <div id="songsContainer" class="border rounded p-3 bg-light">
+                                <div class="song-select-wrapper mb-2">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white">
+                                            <i class="fas fa-music"></i>
+                                        </span>
+                                        <select name="SelectedSongs" class="form-select song-select">
+                                            <option value="">-- Chọn bài hát --</option>
+                                            @foreach (var song in (SelectList)ViewData["Songs"])
+                                            {
+                                                <option value="@song.Value">@song.Text</option>
+                                            }
+                                        </select>
+                                        <button type="button" class="btn btn-outline-danger" onclick="removeSongSelect(this)" disabled>
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <small class="text-muted d-block mt-2">
+                                <i class="fas fa-info-circle me-1"></i>Chọn các bài hát có sẵn để thêm vào album
+                            </small>
+                        </div>
+
+                        <div class="d-flex gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>Lưu Album
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-1"></i>Quay lại
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+    
+    <script>
+        // Preview ảnh trước khi upload
+        function previewImage(input) {
+            const preview = document.getElementById('preview');
+            const previewContainer = document.getElementById('imagePreview');
+            
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    previewContainer.style.display = 'block';
+                }
+                
+                reader.readAsDataURL(input.files[0]);
+            } else {
+                previewContainer.style.display = 'none';
+            }
+        }
+
+        // Thêm dropdown chọn bài hát mới
+        function addSongSelect() {
+            const container = document.getElementById('songsContainer');
+            const firstSelect = container.querySelector('.song-select-wrapper');
+            const newSelect = firstSelect.cloneNode(true);
+            
+            // Reset giá trị của select mới
+            newSelect.querySelector('select').value = '';
+            
+            // Enable nút xóa
+            const removeBtn = newSelect.querySelector('button');
+            removeBtn.disabled = false;
+            
+            container.appendChild(newSelect);
+            
+            // Enable nút xóa cho tất cả các select (trừ cái đầu tiên)
+            updateRemoveButtons();
+        }
+
+        // Xóa dropdown chọn bài hát
+        function removeSongSelect(button) {
+            const wrapper = button.closest('.song-select-wrapper');
+            wrapper.remove();
+            updateRemoveButtons();
+        }
+
+        // Cập nhật trạng thái các nút xóa
+        function updateRemoveButtons() {
+            const wrappers = document.querySelectorAll('.song-select-wrapper');
+            wrappers.forEach((wrapper, index) => {
+                const removeBtn = wrapper.querySelector('button[onclick*="removeSongSelect"]');
+                removeBtn.disabled = (wrappers.length === 1);
+            });
+        }
+
+        // Validation form trước khi submit
+        document.getElementById('albumForm').addEventListener('submit', function(e) {
+            const selectedSongs = Array.from(document.querySelectorAll('select[name="SelectedSongs"]'))
+                .map(select => select.value)
+                .filter(value => value !== '');
+            
+            // Kiểm tra trùng lặp
+            const uniqueSongs = new Set(selectedSongs);
+            if (selectedSongs.length !== uniqueSongs.size) {
+                e.preventDefault();
+                alert('Vui lòng không chọn trùng bài hát!');
+                return false;
+            }
+        });
+    </script>
+
+    <style>
+        .song-select-wrapper {
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @@keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card {
+            border: none;
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+        }
+
+        .form-label {
+            color: #495057;
+        }
+
+        .input-group-text {
+            border-right: none;
+        }
+
+        .input-group .form-select {
+            border-left: none;
+        }
+    </style>
+}

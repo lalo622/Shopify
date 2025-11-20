@@ -1,0 +1,29 @@
+﻿@model Shopify.Models.Album
+
+@{
+    ViewData["Title"] = "Delete";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<h3>Bạn có chắc chắn muốn xóa album này?</h3>
+<div>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">Tiêu đề</dt>
+        <dd class="col-sm-10">@Model.Title</dd>
+
+        <dt class="col-sm-2">Nghệ sĩ</dt>
+        <dd class="col-sm-10">@Model.Artist?.Name</dd>
+
+        <dt class="col-sm-2">Ngày phát hành</dt>
+        <dd class="col-sm-10">@Model.ReleaseDate.ToString("dd/MM/yyyy")</dd>
+    </dl>
+
+    <form asp-action="Delete">
+        <input type="hidden" asp-for="AlbumId" />
+        <button type="submit" class="btn btn-danger">Xóa</button>
+        <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+    </form>
+</div>

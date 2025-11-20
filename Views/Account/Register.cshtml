@@ -1,0 +1,72 @@
+﻿@model Shopify.Models.User
+@{
+    Layout = "_Layout";
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <title>Đăng ký - Shopify</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: #0e0e0e;
+            color: white;
+            font-family: 'Inter', sans-serif;
+            /* ĐÃ XÓA: display: flex, align-items, justify-content, height: 100vh; */
+        }
+
+        /* CSS MỚI: Dùng thẻ bọc ngoài để căn giữa riêng nội dung form */
+        .centered-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: calc(100vh - 50px); /* 100vh trừ đi chiều cao của Bottom Nav (ví dụ 50px) */
+            /* Hoặc dùng min-height: 100vh; nếu Bottom Nav là fixed/absolute */
+        }
+
+        .form-container {
+            width: 400px;
+        }
+
+        input, button {
+            width: 100%;
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 6px;
+            border: none;
+        }
+
+        input {
+            background: #1a1a1a;
+            color: white;
+        }
+
+        button {
+            background: #63d7d4;
+            color: black;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="centered-content">
+        <div class="form-container">
+            <h2>Đăng ký để bắt đầu nghe</h2>
+            <form asp-action="Register" method="post">
+                <input asp-for="Username" placeholder="Tên người dùng" />
+                <span asp-validation-for="Username" style="color:red"></span>
+
+                <input asp-for="Email" placeholder="Email" />
+                <span asp-validation-for="Email" style="color:red"></span>
+
+                <input asp-for="PasswordHash" type="password" placeholder="Mật khẩu" />
+                <span asp-validation-for="PasswordHash" style="color:red"></span>
+
+                <button type="submit">Đăng ký</button>
+            </form>
+            <p>Bạn đã có tài khoản? <a href="/Account/Login">Đăng nhập</a></p>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,298 @@
+﻿    @model Shopify.ViewModels.HomeViewModel
+    @using Microsoft.AspNetCore.Identity
+    @inject IHttpContextAccessor HttpContextAccessor
+
+    @{
+        ViewData["Title"] = "Shopify";
+        var user = HttpContextAccessor.HttpContext.User;
+        bool isVipUser = user.Identity.IsAuthenticated
+                         && user.Claims.Any(c => c.Type == "UserId")
+                         && bool.TryParse(user.FindFirst("IsVip")?.Value, out var vip) && vip;
+    }
+
+    <link rel="stylesheet" href="~/css/home.css" />
+
+    <body data-is-vip="@isVipUser.ToString().ToLower()">
+
+        <main class="main-content">
+
+           
+            <section>
+                <div class="section-header d-flex justify-content-between align-items-center">
+                    <h3>Những bài hát thịnh hành</h3>
+
+                    <div class="d-flex" style="gap: 10px;">
+                        <div class="dropdown">
+                            <button class="btn btn-dark d-flex align-items-center" data-bs-toggle="dropdown" style="gap:6px;">
+                                <i class="fa-solid fa-plus"></i> Tạo Playlist
+                            </button>
+
+                            <ul class="dropdown-menu dropdown-menu-dark shadow-lg">
+                                <li>
+                                    <a class="dropdown-item" href="/Playlist/Create">
+                                        <i class="fa-solid fa-music me-2"></i> Playlist
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="/Playlist/Index">
+                                        <i class="fa-solid fa-users me-2"></i> Danh Sách Playlist
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+
+                        
+                        <button id="btn-open-playlist" class="btn btn-secondary d-flex align-items-center" style="gap:6px;">
+                            <i class="fa-solid fa-list-music"></i> Danh sách phát
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card-grid">
+                    @foreach (var song in Model.TrendingSongs)
+                    {
+                        <div class="card song-card"
+                             data-song-id="@song.SongId"
+                             data-audio="@song.AudioUrl"
+                             data-title="@song.Title"
+                             data-artist="@song.Artist?.Name"
+                             data-isvip="@song.IsVip.ToString().ToLower()"
+                             data-image="@(song.ImageUrl ?? song.Album?.CoverImageUrl ?? "/images/default-song.png")">
+
+                            <img src="@(song.ImageUrl ?? song.Album?.CoverImageUrl ?? "/images/default-song.png")"
+                                 alt="@song.Title" onerror="this.src='/images/default-song.png'" />
+
+                            @if (song.IsVip)
+                            {
+                                <div class="vip-badge">VIP</div>
+                            }
+
+                            <div class="card-info">
+                                <h5 class="song-title">@song.Title</h5>
+                                <p class="song-artist">@song.Artist?.Name</p>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </section>
+
+            <section>
+                <div class="section-header">
+                    <h3>Nghệ sĩ phổ biến</h3>
+                    <a href="#">Hiện tất cả</a>
+                </div>
+                <div class="artist-grid">
+                    @foreach (var artist in Model.PopularArtists)
+                    {
+                        <a asp-controller="Artists" asp-action="Detail" asp-route-id="@artist.Id" class="text-decoration-none text-light">
+                            <div class="artist-card">
+                                <img src="@(artist.ImageUrl ?? "/images/default-artist.png")"
+                                     alt="@artist.Name" onerror="this.src='/images/default-artist.png'" />
+                                <p>@artist.Name</p>
+                            </div>
+                        </a>
+                    }
+                </div>
+            </section>
+
+            <section>
+                <div class="section-header">
+                    <h3>Album thịnh hành</h3>
+                    <a href="#">Hiện tất cả</a>
+                </div>
+                <div class="album-grid">
+                    @foreach (var album in Model.PopularAlbums)
+                    {
+                        <div class="album-card">
+                            <img src="@(album.CoverImageUrl ?? "/images/default-album.png")"
+                                 alt="@album.Title" onerror="this.src='/images/default-album.png'" />
+                            <div class="album-info">
+                                <h5>@album.Title</h5>
+                                <p>@album.Artist?.Name</p>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </section>
+
+        </main>
+
+        <aside id="playlist-panel" class="playlist-panel">
+            <span class="playlist-close">&times;</span>
+            <h4 class="playlist-title">Danh sách phát</h4>
+            <div class="playlist-body">
+                @foreach (var song in Model.TrendingSongs.Take(10))
+                {
+                    <div class="playlist-item"
+                         data-song-id="@song.SongId"
+                         data-audio="@song.AudioUrl"
+                         data-title="@song.Title"
+                         data-artist="@song.Artist?.Name"
+                         data-image="@(song.ImageUrl ?? song.Album?.CoverImageUrl ?? "/images/default-song.png")"
+                         data-isvip="@song.IsVip.ToString().ToLower()">
+
+                        <img src="@(song.ImageUrl ?? "/images/default-song.png")" alt="cover" />
+                        <div class="playlist-info">
+                            <span class="name">@song.Title</span>
+                            <span class="artist">@song.Artist?.Name</span>
+                        </div>
+
+                        @if (song.IsVip)
+                        {
+                            <span class="playlist-vip">VIP</span>
+                        }
+                    </div>
+                }
+            </div>
+        </aside>
+
+    </body>
+
+
+    @section Styles {
+        <style>
+            .vip-badge {
+                position: absolute;
+                top: 8px;
+                right: 8px;
+                background-color: gold;
+                color: #121212;
+                font-weight: bold;
+                padding: 4px 8px;
+                border-radius: 6px;
+                font-size: 0.75rem;
+                z-index: 10;
+                text-transform: uppercase;
+            }
+
+            
+            .playlist-panel {
+                position: fixed;
+                right: -330px;
+                top: 60px;
+                width: 330px;
+                bottom: 0;
+                background: #181818;
+                padding: 20px;
+                overflow-y: auto;
+                border-left: 1px solid #333;
+                z-index: 99;
+                transition: right 0.35s ease;
+            }
+
+                
+                .playlist-panel.active {
+                    right: 0;
+                }
+
+            .playlist-close {
+                position: absolute;
+                top: 10px;
+                right: 12px;
+                cursor: pointer;
+                color: white;
+                font-size: 22px;
+            }
+
+            .playlist-body {
+                margin-top: 40px;
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .playlist-item {
+                display: flex;
+                gap: 12px;
+                padding: 10px;
+                border-radius: 8px;
+                cursor: pointer;
+                transition: .2s;
+            }
+
+                .playlist-item:hover {
+                    background: #252525;
+                }
+
+                .playlist-item img {
+                    width: 48px;
+                    height: 48px;
+                    border-radius: 6px;
+                    object-fit: cover;
+                }
+
+            .playlist-info .name {
+                font-size: 15px;
+                font-weight: 600;
+                color: #fff;
+            }
+
+            .playlist-info .artist {
+                font-size: 13px;
+                color: #bbb;
+            }
+
+            .playlist-vip {
+                margin-left: auto;
+                background: gold;
+                color: black;
+                padding: 3px 6px;
+                border-radius: 6px;
+                font-size: 11px;
+                font-weight: 700;
+            }
+        </style>
+    }
+
+    @section Scripts {
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+
+                const isVipUser = document.body.dataset.isVip === 'true';
+
+               
+                document.querySelectorAll('.song-card').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const vip = btn.dataset.isvip === "true";
+                        if (vip && !isVipUser) return alert("Bài hát này dành cho VIP");
+
+                        const song = {
+                            id: btn.dataset.songId, title: btn.dataset.title,
+                            artist: btn.dataset.artist, audio: btn.dataset.audio,
+                            image: btn.dataset.image
+                        };
+                        if (window.playNow) window.playNow(song);
+                    });
+                });
+
+                
+                document.querySelectorAll('.playlist-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        const vip = item.dataset.isvip === "true";
+                        if (vip && !isVipUser) return alert("Bài hát này dành cho VIP");
+
+                        const song = {
+                            id: item.dataset.songId, title: item.dataset.title,
+                            artist: item.dataset.artist, audio: item.dataset.audio,
+                            image: item.dataset.image
+                        };
+                        if (window.playNow) window.playNow(song);
+                    });
+                });
+
+              
+                const playlistPanel = document.getElementById("playlist-panel");
+                const openBtn = document.getElementById("btn-open-playlist");
+                const closeBtn = document.querySelector(".playlist-close");
+
+                openBtn.addEventListener("click", () => {
+                    playlistPanel.classList.toggle("active");
+                });
+
+                closeBtn.addEventListener("click", () => {
+                    playlistPanel.classList.remove("active");
+                });
+
+            });
+        </script>
+    }

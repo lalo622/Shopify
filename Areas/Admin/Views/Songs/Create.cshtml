@@ -1,0 +1,339 @@
+@using Shopify.Models
+@model Song
+
+@{
+    ViewData["Title"] = "Thêm bài hát";
+}
+
+<div class="container-fluid px-4">
+    <h2 class="mt-4 mb-4">Thêm bài hát mới</h2>
+
+    <!-- HIỂN THỊ THÔNG BÁO THÀNH CÔNG -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- HIỂN THỊ THÔNG BÁO LỖI -->
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle"></i> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- HIỂN THỊ LỖI TỪ MODELSTATE -->
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <h5><i class="fas fa-exclamation-triangle"></i> Có lỗi xảy ra:</h5>
+            <ul class="mb-0">
+                @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                {
+                    <li>@error.ErrorMessage</li>
+                }
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="card shadow">
+        <div class="card-body">
+            <form asp-action="Create" method="post" enctype="multipart/form-data" id="createSongForm">
+                @Html.AntiForgeryToken()
+                
+                <div class="row">
+                    <!-- Tên bài hát -->
+                    <div class="col-md-6 mb-3">
+                        <label for="Title" class="form-label fw-bold">
+                            <i class="fas fa-music"></i> Tên bài hát <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" name="Title" id="Title" class="form-control" placeholder="Nhập tên bài hát" required />
+                        <span class="text-danger" id="Title-error"></span>
+                    </div>
+
+                    <!-- Thời lượng -->
+                    <div class="col-md-6 mb-3">
+                        <label for="Duration" class="form-label fw-bold">
+                            <i class="fas fa-clock"></i> Thời lượng
+                        </label>
+                        <input type="text" name="Duration" id="Duration" class="form-control" 
+                               placeholder="Sẽ tự động điền sau khi chọn file nhạc" readonly />
+                        <small class="form-text text-muted">Tự động điền thời lượng từ file nhạc</small>
+                    </div>
+                </div>
+
+                <!-- Mô tả -->
+                <div class="mb-3">
+                    <label for="Description" class="form-label fw-bold">
+                        <i class="fas fa-align-left"></i> Mô tả
+                    </label>
+                    <textarea name="Description" id="Description" class="form-control" rows="3" 
+                              placeholder="Nhập mô tả về bài hát (không bắt buộc)"></textarea>
+                </div>
+
+                <div class="row">
+                    <!-- File nhạc -->
+                    <div class="col-md-6 mb-3">
+                        <label for="audioFile" class="form-label fw-bold">
+                            <i class="fas fa-file-audio"></i> File nhạc <span class="text-danger">*</span>
+                        </label>
+                        <input type="file" name="audioFile" id="audioFile" class="form-control" 
+                               accept=".mp3,.wav,.m4a,.aac,.ogg" required />
+                        <small class="form-text text-muted">
+                            <i class="fas fa-info-circle"></i> Chấp nhận: MP3, WAV, M4A, AAC, OGG (tối đa 50MB)
+                        </small>
+                        @if (ViewData.ModelState["AudioFile"] != null && ViewData.ModelState["AudioFile"].Errors.Count > 0)
+                        {
+                            <div class="text-danger mt-1">
+                                <i class="fas fa-exclamation-circle"></i> @ViewData.ModelState["AudioFile"].Errors.First().ErrorMessage
+                            </div>
+                        }
+                    </div>
+
+                    <!-- File ảnh bìa -->
+                    <div class="col-md-6 mb-3">
+                        <label for="imageFile" class="form-label fw-bold">
+                            <i class="fas fa-image"></i> Ảnh bìa (tùy chọn)
+                        </label>
+                        <input type="file" name="imageFile" id="imageFile" class="form-control" 
+                               accept=".jpg,.jpeg,.png,.gif,.webp" />
+                        <small class="form-text text-muted">
+                            <i class="fas fa-info-circle"></i> Chấp nhận: JPG, PNG, GIF, WEBP (tối đa 5MB)
+                        </small>
+                        @if (ViewData.ModelState["ImageFile"] != null && ViewData.ModelState["ImageFile"].Errors.Count > 0)
+                        {
+                            <div class="text-danger mt-1">
+                                <i class="fas fa-exclamation-circle"></i> @ViewData.ModelState["ImageFile"].Errors.First().ErrorMessage
+                            </div>
+                        }
+                        <!-- Preview ảnh -->
+                        <div id="imagePreview" class="mt-2" style="display:none;">
+                            <img id="previewImg" src="" alt="Preview" class="img-thumbnail" style="max-height: 150px;" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Nghệ sĩ - ĐÃ SỬA: asp-for="ArtistId" thay vì asp-for="Id" -->
+                    <div class="col-md-4 mb-3">
+                        <label for="ArtistId" class="form-label fw-bold">
+                            <i class="fas fa-user"></i> Nghệ sĩ <span class="text-danger">*</span>
+                        </label>
+                        <select name="ArtistId" id="ArtistId" class="form-select" required>
+                            <option value="">-- Chọn nghệ sĩ --</option>
+                            @if (ViewBag.Artists != null && ViewBag.Artists.Count > 0)
+                            {
+                                foreach (var artist in ViewBag.Artists)
+                                {
+                                    <option value="@artist.Id">@artist.Name</option>
+                                }
+                            }
+                            else
+                            {
+                                <option value="" disabled>Không có nghệ sĩ nào</option>
+                            }
+                        </select>
+                        <span class="text-danger" id="ArtistId-error"></span>
+                    </div>
+
+                    <!-- Thể loại -->
+                    <div class="col-md-4 mb-3">
+                        <label for="GenreId" class="form-label fw-bold">
+                            <i class="fas fa-guitar"></i> Thể loại <span class="text-danger">*</span>
+                        </label>
+                        <select name="GenreId" id="GenreId" class="form-select" required>
+                            <option value="">-- Chọn thể loại --</option>
+                            @if (ViewBag.Genres != null && ViewBag.Genres.Count > 0)
+                            {
+                                foreach (var genre in ViewBag.Genres)
+                                {
+                                    <option value="@genre.GenreId">@genre.Name</option>
+                                }
+                            }
+                            else
+                            {
+                                <option value="" disabled>Không có thể loại nào</option>
+                            }
+                        </select>
+                        <span class="text-danger" id="GenreId-error"></span>
+                    </div>
+
+                    <!-- Album (optional) -->
+                    <div class="col-md-4 mb-3">
+                        <label for="AlbumId" class="form-label fw-bold">
+                            <i class="fas fa-compact-disc"></i> Album (tùy chọn)
+                        </label>
+                        <select name="AlbumId" id="AlbumId" class="form-select">
+                            <option value="">-- Không thuộc album --</option>
+                            @if (ViewBag.Albums != null && ViewBag.Albums.Count > 0)
+                            {
+                                foreach (var album in ViewBag.Albums)
+                                {
+                                    <option value="@album.AlbumId">
+                                        @album.Title (@album.Artist?.Name)
+                                    </option>
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <hr class="my-4" />
+
+                <!-- DEBUG: Hiển thị giá trị được chọn -->
+                <div class="alert alert-info">
+                    <strong>DEBUG:</strong>
+                    <div>ArtistId: <span id="debug-artist">Chưa chọn</span></div>
+                    <div>GenreId: <span id="debug-genre">Chưa chọn</span></div>
+                    <div>AlbumId: <span id="debug-album">Chưa chọn</span></div>
+                </div>
+
+                <!-- Buttons -->
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save"></i> Lưu bài hát
+                    </button>
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Hủy
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <script>
+        // Script xử lý file audio
+        document.getElementById('audioFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const durationInput = document.getElementById('Duration');
+            
+            if (file) {
+                // Kiểm tra kích thước file
+                const maxSize = 50 * 1024 * 1024; // 50MB
+                if (file.size > maxSize) {
+                    alert('⚠️ File quá lớn! Kích thước tối đa là 50MB.');
+                    e.target.value = '';
+                    durationInput.value = '';
+                    return;
+                }
+                
+                // Kiểm tra định dạng file
+                const allowedExtensions = ['.mp3', '.wav', '.m4a', '.aac', '.ogg'];
+                const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+                
+                if (!allowedExtensions.includes(fileExtension)) {
+                    alert('⚠️ Chỉ chấp nhận file nhạc: MP3, WAV, M4A, AAC, OGG');
+                    e.target.value = '';
+                    durationInput.value = '';
+                    return;
+                }
+                
+                // Lấy thời lượng từ file
+                getAudioDuration(file).then(duration => {
+                    if (duration && duration > 0) {
+                        const minutes = Math.floor(duration / 60);
+                        const seconds = Math.floor(duration % 60);
+                        const hours = Math.floor(minutes / 60);
+                        const remainingMinutes = minutes % 60;
+                        
+                        const formattedDuration = 
+                            hours.toString().padStart(2, '0') + ':' +
+                            remainingMinutes.toString().padStart(2, '0') + ':' +
+                            seconds.toString().padStart(2, '0');
+                        
+                        durationInput.value = formattedDuration;
+                        console.log('✅ Thời lượng:', formattedDuration);
+                    }
+                }).catch(error => {
+                    console.error('❌ Lỗi khi lấy thời lượng:', error);
+                    durationInput.readOnly = false;
+                    durationInput.placeholder = 'Nhập thời lượng (hh:mm:ss)';
+                    alert('⚠️ Không thể đọc thời lượng file. Vui lòng nhập thủ công.');
+                });
+            } else {
+                durationInput.value = '';
+            }
+        });
+
+        // Script xử lý file ảnh với preview
+        document.getElementById('imageFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const previewDiv = document.getElementById('imagePreview');
+            const previewImg = document.getElementById('previewImg');
+            
+            if (file) {
+                // Kiểm tra kích thước file (5MB)
+                const maxSize = 5 * 1024 * 1024; // 5MB
+                if (file.size > maxSize) {
+                    alert('⚠️ File ảnh quá lớn! Kích thước tối đa là 5MB.');
+                    e.target.value = '';
+                    previewDiv.style.display = 'none';
+                    return;
+                }
+                
+                // Kiểm tra định dạng file
+                const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+                const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+                
+                if (!allowedExtensions.includes(fileExtension)) {
+                    alert('⚠️ Chỉ chấp nhận file ảnh: JPG, PNG, GIF, WEBP');
+                    e.target.value = '';
+                    previewDiv.style.display = 'none';
+                    return;
+                }
+                
+                // Hiển thị preview
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImg.src = e.target.result;
+                    previewDiv.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+                
+                console.log('✅ Ảnh đã chọn:', file.name);
+            } else {
+                previewDiv.style.display = 'none';
+            }
+        });
+
+        // Hàm lấy thời lượng audio
+        function getAudioDuration(file) {
+            return new Promise((resolve, reject) => {
+                const audio = new Audio();
+                const objectUrl = URL.createObjectURL(file);
+                
+                audio.src = objectUrl;
+                
+                audio.addEventListener('loadedmetadata', function() {
+                    URL.revokeObjectURL(objectUrl);
+                    resolve(audio.duration);
+                });
+                
+                audio.addEventListener('error', function(e) {
+                    URL.revokeObjectURL(objectUrl);
+                    reject(e);
+                });
+                
+                // Timeout sau 10 giây
+                setTimeout(() => {
+                    URL.revokeObjectURL(objectUrl);
+                    reject(new Error('Timeout khi đọc file'));
+                }, 10000);
+            });
+        }
+
+        // Auto dismiss alerts sau 5 giây
+        setTimeout(function() {
+            $('.alert').fadeOut('slow');
+        }, 5000);
+    </script>
+}

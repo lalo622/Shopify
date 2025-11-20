@@ -1,0 +1,315 @@
+﻿@model IEnumerable<Shopify.Models.Premium>
+
+@{
+    ViewData["Title"] = "Chọn Gói Premium";
+}
+
+<style>
+    .premium-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 40px 20px;
+    }
+
+    .premium-hero {
+        text-align: center;
+        margin-bottom: 60px;
+        padding: 60px 20px;
+        background: linear-gradient(180deg, #1db954 0%, #121212 100%);
+        border-radius: 12px;
+    }
+
+    .premium-hero h1 {
+        font-size: 3rem;
+        font-weight: 900;
+        margin-bottom: 20px;
+        color: #fff;
+    }
+
+    .premium-hero p {
+        font-size: 1.2rem;
+        color: #b3b3b3;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .premium-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 24px;
+        margin-bottom: 60px;
+    }
+
+    .premium-card {
+        background: #181818;
+        border-radius: 12px;
+        padding: 32px;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        border: 2px solid transparent;
+    }
+
+    .premium-card:hover {
+        background: #282828;
+        transform: translateY(-8px);
+        border-color: #1db954;
+        box-shadow: 0 8px 24px rgba(29, 185, 84, 0.3);
+    }
+
+    .premium-card.featured {
+        border-color: #1db954;
+        background: linear-gradient(135deg, #181818 0%, #1a3a24 100%);
+    }
+
+    .premium-card.featured::before {
+        content: 'PHỔ BIẾN NHẤT';
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        background: #1db954;
+        color: #000;
+        font-size: 0.7rem;
+        font-weight: 900;
+        padding: 4px 12px;
+        border-radius: 20px;
+        letter-spacing: 1px;
+    }
+
+    .package-name {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin-bottom: 12px;
+        color: #fff;
+    }
+
+    .package-description {
+        color: #b3b3b3;
+        font-size: 0.95rem;
+        margin-bottom: 24px;
+        line-height: 1.5;
+        min-height: 48px;
+    }
+
+    .package-price {
+        display: flex;
+        align-items: baseline;
+        margin-bottom: 32px;
+        padding: 20px 0;
+        border-top: 1px solid #282828;
+        border-bottom: 1px solid #282828;
+    }
+
+    .price-amount {
+        font-size: 2.5rem;
+        font-weight: 900;
+        color: #1db954;
+        margin-right: 8px;
+    }
+
+    .price-currency {
+        font-size: 1.2rem;
+        color: #1db954;
+        font-weight: 600;
+    }
+
+    .benefits-list {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 32px 0;
+    }
+
+    .benefits-list li {
+        display: flex;
+        align-items: flex-start;
+        padding: 12px 0;
+        color: #fff;
+        font-size: 0.95rem;
+    }
+
+    .benefits-list li::before {
+        content: '✓';
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        background: #1db954;
+        color: #000;
+        border-radius: 50%;
+        font-weight: 900;
+        margin-right: 12px;
+        flex-shrink: 0;
+        font-size: 0.9rem;
+    }
+
+    .btn-premium {
+        width: 100%;
+        background: #1db954;
+        color: #000;
+        border: none;
+        padding: 16px;
+        font-size: 1rem;
+        font-weight: 700;
+        border-radius: 500px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        text-decoration: none;
+        display: inline-block;
+        text-align: center;
+    }
+
+    .btn-premium:hover {
+        background: #1ed760;
+        transform: scale(1.04);
+        color: #000;
+    }
+
+    .premium-features {
+        background: #181818;
+        border-radius: 12px;
+        padding: 48px;
+        text-align: center;
+        margin-top: 60px;
+    }
+
+    .premium-features h2 {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 16px;
+        color: #fff;
+    }
+
+    .premium-features p {
+        color: #b3b3b3;
+        font-size: 1.1rem;
+        max-width: 700px;
+        margin: 0 auto;
+    }
+
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 32px;
+        margin-top: 48px;
+    }
+
+    .feature-item {
+        text-align: center;
+    }
+
+    .feature-icon {
+        width: 64px;
+        height: 64px;
+        background: #282828;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        font-size: 2rem;
+    }
+
+    .feature-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+        color: #fff;
+    }
+
+    .feature-text {
+        color: #b3b3b3;
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+
+    @@media (max-width: 768px) {
+        .premium-hero h1 {
+            font-size: 2rem;
+        }
+        
+        .premium-hero p {
+            font-size: 1rem;
+        }
+
+        .premium-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="premium-container">
+    <!-- Hero Section -->
+    <div class="premium-hero">
+        <h1>Nâng cấp trải nghiệm của bạn</h1>
+        <p>Nghe nhạc không giới hạn, không quảng cáo và tải xuống offline với Shopify Premium</p>
+    </div>
+
+    <!-- Pricing Cards -->
+    <div class="premium-grid">
+        @{
+            var premiumList = Model.ToList();
+            for (int i = 0; i < premiumList.Count; i++)
+            {
+                var item = premiumList[i];
+                var isFeatured = i == 1; // Gói ở giữa là featured
+                
+                <div class="premium-card @(isFeatured ? "featured" : "")">
+                    <h3 class="package-name">@item.Name</h3>
+                    <p class="package-description">@item.Description</p>
+                    
+                    <div class="package-price">
+                        <span class="price-amount">@item.Price.ToString("N0")</span>
+                        <span class="price-currency">₫</span>
+                    </div>
+                    
+                    <ul class="benefits-list">
+                        <li>Nghe nhạc không quảng cáo</li>
+                        <li>Tải xuống không giới hạn</li>
+                        <li>Chất lượng âm thanh cao</li>
+                        <li>Bỏ qua bài hát không giới hạn</li>
+                    </ul>
+                    
+                    <a href="@Url.Action("Pay", "Premium", new { id = item.PremiumId })" 
+                       class="btn-premium">
+                        Mua ngay
+                    </a>
+                </div>
+            }
+        }
+    </div>
+
+    <!-- Features Section -->
+    <div class="premium-features">
+        <h2>Tại sao nên chọn Premium?</h2>
+        <p>Trải nghiệm âm nhạc hoàn hảo với những tính năng vượt trội</p>
+        
+        <div class="features-grid">
+            <div class="feature-item">
+                <div class="feature-icon">🎵</div>
+                <h4 class="feature-title">Không quảng cáo</h4>
+                <p class="feature-text">Thưởng thức âm nhạc liên tục không bị gián đoạn</p>
+            </div>
+            
+            <div class="feature-item">
+                <div class="feature-icon">⬇️</div>
+                <h4 class="feature-title">Tải xuống</h4>
+                <p class="feature-text">Nghe offline mọi lúc mọi nơi, không cần kết nối</p>
+            </div>
+            
+            <div class="feature-item">
+                <div class="feature-icon">🎧</div>
+                <h4 class="feature-title">Chất lượng cao</h4>
+                <p class="feature-text">Âm thanh cực chất với chất lượng cao nhất</p>
+            </div>
+            
+            <div class="feature-item">
+                <div class="feature-icon">⏭️</div>
+                <h4 class="feature-title">Không giới hạn</h4>
+                <p class="feature-text">Bỏ qua bài hát thoải mái, không giới hạn</p>
+            </div>
+        </div>
+    </div>
+</div>

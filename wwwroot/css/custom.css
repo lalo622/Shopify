@@ -1,0 +1,71 @@
+/* ============ BASIC RESET ============ */
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #121212;
+  color: #ffffff;
+}
+
+a.navbar-brand {
+  white-space: normal;
+  text-align: center;
+  word-break: break-all;
+}
+
+a {
+  color: #1db954;
+  text-decoration: none;
+}
+
+a:hover {
+  color: #1ed760;
+  text-decoration: underline;
+}
+
+/* ============ BUTTONS ============ */
+.btn-primary {
+  color: #fff;
+  background-color: #1db954;
+  border-color: #1db954;
+}
+
+.btn-primary:hover {
+  background-color: #1ed760;
+  border-color: #1ed760;
+}
+
+/* ============ NAVIGATION ============ */
+.nav-pills .nav-link.active, .nav-pills .show > .nav-link {
+  color: #fff;
+  background-color: #1db954;
+  border-color: #1db954;
+}
+
+/* ============ FOOTER ============ */
+.footer {
+  position: relative;
+  bottom: 0;
+  width: 100%;
+  line-height: 60px;
+  background-color: #1E1E1E;
+  color: #bdbdbd;
+}
+
+/* ============ SEARCH BAR ============ */
+.input-group-text {
+  background-color: #f2f2f2 !important;
+}
+
+.form-control {
+  box-shadow: none !important;
+}
+
+/* ============ DROPDOWN ============ */
+.dropdown-menu {
+  transition: all 0.2s ease-in-out;
+}
+
+.dropdown-menu .dropdown-item:hover {
+  background-color: #4a4a4a;
+  color: #fff !important;
+}

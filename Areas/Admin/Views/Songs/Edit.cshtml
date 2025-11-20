@@ -1,0 +1,169 @@
+@using Shopify.Models
+@model Song
+
+@{
+    ViewData["Title"] = "Chỉnh sửa bài hát";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<div class="container-fluid px-4">
+    <h2 class="mt-4 mb-4">Chỉnh sửa bài hát: @Model.Title</h2>
+
+    <!-- Thông báo thành công -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Thông báo lỗi -->
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <h5><i class="fas fa-exclamation-triangle"></i> Có lỗi xảy ra:</h5>
+            <ul class="mb-0">
+                @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                {
+                    <li>@error.ErrorMessage</li>
+                }
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="card shadow">
+        <div class="card-body">
+            <!-- File audio hiện tại -->
+            @if (!string.IsNullOrEmpty(Model.AudioUrl))
+            {
+                <div class="alert alert-info mb-4">
+                    <h5><i class="fas fa-headphones"></i> File nhạc hiện tại</h5>
+                    <audio controls class="w-100 mt-2">
+                        <source src="@Model.AudioUrl" type="audio/mpeg">
+                        Trình duyệt không hỗ trợ phát nhạc.
+                    </audio>
+                    <small class="text-muted d-block mt-2">
+                        <i class="fas fa-info-circle"></i> Bạn có thể giữ nguyên file này hoặc tải lên file mới
+                    </small>
+                </div>
+            }
+
+            <form asp-area="Admin"
+                  asp-controller="Songs"
+                  asp-action="Edit"
+                  asp-route-id="@Model.SongId"
+                  method="post"
+                  enctype="multipart/form-data"
+                  id="editSongForm">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="SongId" />
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Title" class="form-label fw-bold">
+                            <i class="fas fa-music"></i> Tên bài hát
+                        </label>
+                        <input asp-for="Title" class="form-control" placeholder="Sửa tên bài hát nếu muốn" />
+                        <span asp-validation-for="Title" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Duration" class="form-label fw-bold">
+                            <i class="fas fa-clock"></i> Thời lượng
+                        </label>
+                        <input asp-for="Duration" id="Duration" class="form-control" placeholder="Tự động cập nhật nếu chọn file mới" />
+                        <small class="form-text text-muted">Thời lượng hiện tại: @(Model.Duration ?? "Chưa có")</small>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Description" class="form-label fw-bold">
+                        <i class="fas fa-align-left"></i> Mô tả
+                    </label>
+                    <textarea asp-for="Description" class="form-control" rows="3">@Model.Description</textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label for="audioFile" class="form-label fw-bold">
+                        <i class="fas fa-file-audio"></i> Thay đổi file nhạc (tùy chọn)
+                    </label>
+                    <input type="file" name="audioFile" id="audioFile" class="form-control" accept=".mp3,.wav,.m4a,.aac,.ogg" />
+                    <small class="form-text text-muted">Chấp nhận: MP3, WAV, M4A, AAC, OGG (tối đa 50MB)</small>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label asp-for="ArtistId" class="form-label fw-bold">Nghệ sĩ <span class="text-danger">*</span></label>
+                        <select asp-for="ArtistId" class="form-select" required>
+                            <option value="">-- Chọn nghệ sĩ --</option>
+                            @foreach (var artist in ViewBag.Artists)
+                            {
+                                <option value="@artist.Id" @(artist.Id == Model.ArtistId ? "selected" : "")>@artist.Name</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label asp-for="GenreId" class="form-label fw-bold">Thể loại <span class="text-danger">*</span></label>
+                        <select asp-for="GenreId" class="form-select" required>
+                            <option value="">-- Chọn thể loại --</option>
+                            @foreach (var genre in ViewBag.Genres)
+                            {
+                                <option value="@genre.GenreId" @(genre.GenreId == Model.GenreId ? "selected" : "")>@genre.Name</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label asp-for="AlbumId" class="form-label fw-bold">Album (tùy chọn)</label>
+                        <select asp-for="AlbumId" class="form-select">
+                            <option value="">-- Không thuộc album --</option>
+                            @foreach (var album in ViewBag.Albums)
+                            {
+                                <option value="@album.AlbumId" @(album.AlbumId == Model.AlbumId ? "selected" : "")>@album.Title (@album.Artist?.Name)</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <hr class="my-4" />
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Lưu thay đổi</button>
+                    <a asp-action="Index" class="btn btn-secondary"><i class="fas fa-times"></i> Hủy</a>
+                    <a asp-action="Details" asp-route-id="@Model.SongId" class="btn btn-info"><i class="fas fa-eye"></i> Xem chi tiết</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            // Lấy thời lượng audio tự động khi chọn file
+            $('#audioFile').on('change', function (e) {
+                const file = e.target.files[0];
+                const durationInput = $('#Duration');
+                if (file) {
+                    const audio = new Audio();
+                    const objectUrl = URL.createObjectURL(file);
+                    audio.src = objectUrl;
+                    audio.addEventListener('loadedmetadata', function () {
+                        const duration = audio.duration;
+                        const min = Math.floor(duration / 60);
+                        const sec = Math.floor(duration % 60);
+                        durationInput.val(min.toString().padStart(2, '0') + ':' + sec.toString().padStart(2, '0'));
+                        URL.revokeObjectURL(objectUrl);
+                    });
+                }
+            });
+
+            // Ẩn alert sau 5s
+            setTimeout(() => $('.alert').fadeOut('slow'), 5000);
+        });
+    </script>
+}

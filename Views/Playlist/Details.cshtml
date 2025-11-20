@@ -1,0 +1,31 @@
+﻿@model Shopify.Models.Playlist
+@using Shopify.Models
+
+<h2>@Model.Name</h2>
+
+<h4>Bài hát trong playlist</h4>
+<ul class="list-group mb-4">
+    @foreach (var item in Model.PlaylistSongs)
+    {
+        <li class="list-group-item">
+            🎵 @item.Song.Title - @item.Song.Artist?.Name
+        </li>
+    }
+</ul>
+
+<hr />
+
+<h4>Thêm bài hát</h4>
+
+<form method="post" action="/Playlist/AddSong">
+    <input type="hidden" name="playlistId" value="@Model.PlaylistId" />
+
+    <select name="songId" class="form-control">
+        @foreach (Song s in ViewBag.AllSongs)
+        {
+            <option value="@s.SongId">@s.Title</option>
+        }
+    </select>
+
+    <button class="btn btn-primary mt-2">Thêm</button>
+</form>
