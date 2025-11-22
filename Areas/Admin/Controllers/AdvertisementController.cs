@@ -30,27 +30,49 @@ namespace Shopify.Areas.Admin.Controllers
             return View();
         }
 
+        // Helper method to save files
+        private async Task<string?> SaveFile(IFormFile file, string subFolder)
+        {
+            if (file == null || file.Length == 0) return null;
+
+            string uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", subFolder);
+            Directory.CreateDirectory(uploadsFolder);
+            string uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
+            string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+            using (var fileStream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(fileStream);
+            }
+            return $"/uploads/{subFolder}/{uniqueFileName}";
+        }
+
+        // Helper method to delete files
+        private void DeleteFile(string? url)
+        {
+            if (!string.IsNullOrEmpty(url))
+            {
+                var path = Path.Combine(_env.WebRootPath, url.TrimStart('/'));
+                if (System.IO.File.Exists(path))
+                    System.IO.File.Delete(path);
+            }
+        }
+
+
         // POST: Admin/Advertisement/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Advertisement advertisement, IFormFile? imageFile)
+        public async Task<IActionResult> Create(Advertisement advertisement, IFormFile? imageFile, IFormFile? audioFile)
         {
             if (ModelState.IsValid)
             {
-                if (imageFile != null && imageFile.Length > 0)
-                {
-                    string uploadsFolder = Path.Combine(_env.WebRootPath, "uploads/advertisements");
-                    Directory.CreateDirectory(uploadsFolder);
-                    string uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(imageFile.FileName);
-                    string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-                    using (var fileStream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await imageFile.CopyToAsync(fileStream);
-                    }
-                    advertisement.ImageUrl = "/uploads/advertisements/" + uniqueFileName;
-                }
+                // Lưu Poster/Image
+                advertisement.PosterUrl = await SaveFile(imageFile, "advertisements/posters");
 
-                advertisement.CreatedAt = DateTime.Now; // Đảm bảo ngày tạo được thiết lập
+                // Lưu Audio
+                advertisement.AudioUrl = await SaveFile(audioFile, "advertisements/audios");
+
+                advertisement.CreatedAt = DateTime.Now;
                 _context.Add(advertisement);
                 await _context.SaveChangesAsync();
                 TempData["success"] = "Thêm quảng cáo thành công!";
@@ -73,43 +95,38 @@ namespace Shopify.Areas.Admin.Controllers
         // POST: Admin/Advertisement/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, Advertisement advertisement, IFormFile? imageFile)
+        public async Task<IActionResult> Edit(int id, Advertisement advertisement, IFormFile? imageFile, IFormFile? audioFile)
         {
             if (id != advertisement.AdvertisementId) return NotFound();
+
+            // Lấy dữ liệu hiện tại (không theo dõi)
+            var existing = await _context.Advertisements.AsNoTracking().FirstOrDefaultAsync(a => a.AdvertisementId == id);
+            if (existing == null) return NotFound();
 
             if (ModelState.IsValid)
             {
                 try
                 {
-                    var existing = await _context.Advertisements.AsNoTracking().FirstOrDefaultAsync(a => a.AdvertisementId == id);
-                    if (existing == null) return NotFound();
-
+                    // Xử lý Poster/Image
                     if (imageFile != null && imageFile.Length > 0)
                     {
-                        string uploadsFolder = Path.Combine(_env.WebRootPath, "uploads/advertisements");
-                        Directory.CreateDirectory(uploadsFolder);
-                        string uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(imageFile.FileName);
-                        string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-                        using (var fileStream = new FileStream(filePath, FileMode.Create))
-                        {
-                            await imageFile.CopyToAsync(fileStream);
-                        }
-
-                        // Xóa ảnh cũ
-                        if (!string.IsNullOrEmpty(existing.ImageUrl))
-                        {
-                            var oldPath = Path.Combine(_env.WebRootPath, existing.ImageUrl.TrimStart('/'));
-                            if (System.IO.File.Exists(oldPath))
-                            {
-                                System.IO.File.Delete(oldPath);
-                            }
-                        }
-
-                        advertisement.ImageUrl = "/uploads/advertisements/" + uniqueFileName;
+                        DeleteFile(existing.PosterUrl); // Xóa ảnh cũ
+                        advertisement.PosterUrl = await SaveFile(imageFile, "advertisements/posters");
                     }
                     else
                     {
-                        advertisement.ImageUrl = existing.ImageUrl; // Giữ nguyên ảnh cũ
+                        advertisement.PosterUrl = existing.PosterUrl; // Giữ nguyên ảnh cũ
+                    }
+
+                    // Xử lý Audio File
+                    if (audioFile != null && audioFile.Length > 0)
+                    {
+                        DeleteFile(existing.AudioUrl); // Xóa file âm thanh cũ
+                        advertisement.AudioUrl = await SaveFile(audioFile, "advertisements/audios");
+                    }
+                    else
+                    {
+                        advertisement.AudioUrl = existing.AudioUrl; // Giữ nguyên audio cũ
                     }
 
                     // Giữ nguyên ngày tạo
@@ -138,13 +155,9 @@ namespace Shopify.Areas.Admin.Controllers
             if (advertisement == null)
                 return Json(new { success = false, message = "Không tìm thấy quảng cáo" });
 
-            // Xóa file ảnh nếu có
-            if (!string.IsNullOrEmpty(advertisement.ImageUrl))
-            {
-                var path = Path.Combine(_env.WebRootPath, advertisement.ImageUrl.TrimStart('/'));
-                if (System.IO.File.Exists(path))
-                    System.IO.File.Delete(path);
-            }
+            // Xóa file ảnh và audio
+            DeleteFile(advertisement.PosterUrl);
+            DeleteFile(advertisement.AudioUrl);
 
             _context.Advertisements.Remove(advertisement);
             await _context.SaveChangesAsync();

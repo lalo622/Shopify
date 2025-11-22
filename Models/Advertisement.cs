@@ -19,17 +19,24 @@ namespace Shopify.Models
         [Display(Name = "Mô tả")]
         public string? Description { get; set; }
 
-        [Display(Name = "Ảnh quảng cáo")]
-        public string? ImageUrl { get; set; }
+        [Display(Name = "Ảnh Poster")]
+        public string? PosterUrl { get; set; } // Thay thế ImageUrl
+
+        [Display(Name = "File Âm thanh")]
+        public string? AudioUrl { get; set; } // Thêm trường cho file âm thanh quảng cáo
 
         [StringLength(255)]
-        [Display(Name = "Liên kết")]
-        public string? Link { get; set; }
+        [Display(Name = "Liên kết nhà quảng cáo")]
+        public string? AdvertiserLink { get; set; } // Thay thế Link
 
         [Display(Name = "Ngày tạo")]
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
         [Display(Name = "Hiển thị")]
         public bool IsActive { get; set; } = true;
+
+        [StringLength(50)]
+        [Display(Name = "Thời lượng")]
+        public string? Duration { get; set; } // Thêm thời lượng quảng cáo (optional)
     }
 }

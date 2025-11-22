@@ -11,7 +11,7 @@
             <div class="card shadow-lg">
                 <div class="card-header bg-primary text-white">
                     <h4 class="mb-0">
-                        <i class="fas fa-plus me-2"></i>Thêm Quảng cáo mới
+                        <i class="fas fa-plus me-2"></i>Thêm Quảng cáo Phát nhạc mới
                     </h4>
                 </div>
 
@@ -42,15 +42,27 @@
                         </div>
 
                         <div class="mb-3">
-                            @Html.LabelFor(m => m.Link, "Liên kết", new { @class = "form-label" })
-                            @Html.TextBoxFor(m => m.Link, new { @class = "form-control", placeholder = "Ví dụ: https://example.com" })
+                            @Html.LabelFor(m => m.Duration, "Thời lượng (vd: 30s)", new { @class = "form-label" })
+                            @Html.TextBoxFor(m => m.Duration, new { @class = "form-control", placeholder = "Nhập thời lượng quảng cáo" })
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">Ảnh quảng cáo</label>
+                            @Html.LabelFor(m => m.AdvertiserLink, "Liên kết nhà quảng cáo", new { @class = "form-label" })
+                            @Html.TextBoxFor(m => m.AdvertiserLink, new { @class = "form-control", placeholder = "Ví dụ: https://example.com" })
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Ảnh Poster (Bìa quảng cáo)</label>
                             <input type="file" name="imageFile" class="form-control" accept="image/*" onchange="previewImage(event)" />
-                            <small class="form-text text-muted">Hỗ trợ JPG, PNG hoặc GIF</small>
+                            <small class="form-text text-muted">Hỗ trợ JPG, PNG, GIF. Kích thước tối đa 2MB.</small>
                             <div id="imagePreview" class="mt-3 text-center"></div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">File Âm thanh (*)</label>
+                            <input type="file" name="audioFile" class="form-control" accept="audio/*" />
+                            @* Thêm ValidationMessage nếu cần *@
+                            <small class="form-text text-muted">Hỗ trợ MP3, WAV. File âm thanh quảng cáo.</small>
                         </div>
 
                         <div class="mb-3">

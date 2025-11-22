@@ -1,11 +1,11 @@
 ﻿@model IEnumerable<Shopify.Models.Advertisement>
 
 @{
-    ViewData["Title"] = "Quản lý Quảng cáo";
+    ViewData["Title"] = "Quản lý Quảng cáo Phát nhạc";
     Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
 }
 
-<h2 class="text-primary mb-4">Quản lý Quảng cáo</h2>
+<h2 class="text-primary mb-4">Quản lý Quảng cáo Phát nhạc</h2>
 
 @* ✅ Hiển thị thông báo *@
 @if (TempData["success"] != null)
@@ -30,8 +30,10 @@
                     <tr>
                         <th>ID</th>
                         <th>@Html.DisplayNameFor(model => model.Title)</th>
-                        <th>@Html.DisplayNameFor(model => model.ImageUrl)</th>
-                        <th>@Html.DisplayNameFor(model => model.Link)</th>
+                        <th>@Html.DisplayNameFor(model => model.PosterUrl)</th> @* Cập nhật *@
+                        <th>@Html.DisplayNameFor(model => model.AudioUrl)</th> @* Thêm mới *@
+                        <th>@Html.DisplayNameFor(model => model.Duration)</th> @* Thêm mới *@
+                        <th>@Html.DisplayNameFor(model => model.AdvertiserLink)</th> @* Cập nhật *@
                         <th>@Html.DisplayNameFor(model => model.CreatedAt)</th>
                         <th>@Html.DisplayNameFor(model => model.IsActive)</th>
                         <th>Thao tác</th>
@@ -44,9 +46,9 @@
                             <td>@Html.DisplayFor(modelItem => item.AdvertisementId)</td>
                             <td>@Html.DisplayFor(modelItem => item.Title)</td>
                             <td>
-                                @if (!string.IsNullOrEmpty(item.ImageUrl))
+                                @if (!string.IsNullOrEmpty(item.PosterUrl))
                                 {
-                                    <img src="@Url.Content(item.ImageUrl)" alt="Ảnh quảng cáo" style="width: 80px; height: auto; border-radius: 5px;" />
+                                    <img src="@Url.Content(item.PosterUrl)" alt="Ảnh Poster" style="width: 80px; height: auto; border-radius: 5px;" />
                                 }
                                 else
                                 {
@@ -54,9 +56,23 @@
                                 }
                             </td>
                             <td>
-                                @if (!string.IsNullOrEmpty(item.Link))
+                                @if (!string.IsNullOrEmpty(item.AudioUrl))
                                 {
-                                    <a href="@item.Link" target="_blank">@item.Link</a>
+                                    <audio controls style="max-width: 150px;">
+                                        <source src="@Url.Content(item.AudioUrl)" type="audio/mpeg">
+                                        Audio
+                                    </audio>
+                                }
+                                else
+                                {
+                                    <span>Không có Audio</span>
+                                }
+                            </td>
+                            <td>@Html.DisplayFor(modelItem => item.Duration)</td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(item.AdvertiserLink))
+                                {
+                                    <a href="@item.AdvertiserLink" target="_blank" title="@item.AdvertiserLink">Liên kết</a>
                                 }
                             </td>
                             <td>@Html.DisplayFor(modelItem => item.CreatedAt)</td>
@@ -101,7 +117,7 @@
             // Ẩn thông báo sau 5 giây
             setTimeout(() => $('.alert').fadeOut('slow'), 5000);
 
-            // Xử lý nút Toggle Active
+            // Xử lý nút Toggle Active (giữ nguyên logic)
             $('.toggle-active-btn').on('click', function () {
                 var id = $(this).data('id');
                 var button = $(this);
@@ -125,7 +141,7 @@
                     });
             });
 
-            // Xử lý nút Delete
+            // Xử lý nút Delete (giữ nguyên logic)
             $('.delete-btn').on('click', function () {
                 var id = $(this).data('id');
                 var row = $(this).closest('tr');
